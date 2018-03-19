@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+
+  tf_serving_w2p_models_server:
+    container_name: tf_serving_w2p_models_server
+    image: $USER/tf_serving_w2p_models_gpu
+    command: /usr/local/bin/tensorflow_model_server --port=9000 --model_config_file=/serving/models/model_list.conf &> logs &
+    networks:
+      - tf_serving
+    ports:
+      - "9000:9000"
+
+  tf_serving_client:
+    container_name: tf_serving_w2p_client_server
+    image: $USER/tf_serving_w2p_client
+    networks:
+      - tf_serving
+    ports:
+      - "5000:5000"
+    environment:
+      - TF_W2P_SERVER_NAME=tf_serving_w2p_models_server
+      - TF_W2P_SERVER_PORT=9000
+      - FLASK_SERVER_NAME=0.0.0.0
+      - FLASK_SERVER_PORT=5000
+      - FLASK_DEBUG=0
+    depends_on:
+      - tf_serving_w2p_models_server
+
+networks:
+  tf_serving:
+    driver: bridge

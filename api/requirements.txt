@@ -1,0 +1,6 @@
+Flask==0.12.2
+flask-restplus==0.10.1
+grpcio==1.7.0
+tensorflow==1.5.0
+flask_cors==3.0.3
+pandas==0.20.1
