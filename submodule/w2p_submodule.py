@@ -49,7 +49,7 @@ class WordToPhoneticVocab(translate.TranslateProblem):
         }]
 
     def generate_samples(self, data_dir, tmp_dir, dataset_split):
-        filename = os.path.join(data_dir, 'dataset.csv')
+        filename = os.path.join(data_dir, 'train_dataset.csv')
         with open(filename, 'r', encoding='utf-8') as f:
             lines = f.readlines()
 
@@ -88,7 +88,7 @@ class WordToPhonetic(text_problems.Text2TextProblem):
         }]
 
     def generate_samples(self, data_dir, tmp_dir, dataset_split):
-        filename = os.path.join(data_dir, 'dataset.csv')
+        filename = os.path.join(data_dir, 'train_dataset.csv')
         with open(filename, 'r', encoding='utf-8') as f:
             lines = f.readlines()
 
