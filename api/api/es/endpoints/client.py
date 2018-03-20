@@ -1,6 +1,7 @@
 import os
 import logging.config
 import settings
+import pandas as pd
 
 from flask import request, send_file
 from flask_restplus import Resource
@@ -60,7 +61,8 @@ class W2POnceES(Resource):
 class W2PFileES(Resource):
     @ns.doc(description='Predicts the most probable g-p mapping and provides the lesson number of a corpus of words.\n'
                         + 'One word per line.\n'
-                        + 'You can provide your own g-p progression.',
+                        + 'You can provide your own g-p progression.'
+                        + 'Progression needs to be a "," separated csv file with two columns : GP and LESSON',
             responses={
                 200: "Success",
                 400: "Bad request",
@@ -71,15 +73,22 @@ class W2PFileES(Resource):
         try:
             files = upload_parser.parse_args()
             corpus_file = files["word_corpus"]
-            progression = files["progression"]
+            progression_file = files["progression"]
             corpus = [str(line, 'utf-8').strip() for line in corpus_file.readlines()]
+
+
+            if progression_file == None:
+                gpProg = pd.read_csv(os.path.join(settings.ES_FILES, 'gp_prog.csv'))
+            else:
+                gpProg = pd.read_csv(progression_file.stream)
+            gpProg = gpProg.loc[gpProg["GP"].notnull()]
 
         except Exception as inst:
             return {'message': 'something wrong with incoming request. ' +
                                'Original message: {}'.format(inst)}, 400
 
         try:
-            return g2p_mapping_file(corpus, progression, settings.ES_MODEL_NAME)
+            return g2p_mapping_file(corpus, gpProg, settings.ES_MODEL_NAME)
 
         except Exception as inst:
             return {'message': 'internal error: {}'.format(inst)}, 500
@@ -94,7 +103,7 @@ class W2PDownloadGpProgES(Resource):
                 })
     def get(self):
         try:
-            return send_file(os.path.join(settings.ES_FILES, "gp_prog.csv"))
+            return send_file(os.path.join(settings.ES_FILES, 'gp_prog.csv'), as_attachment=True)
 
         except Exception as inst:
             return {'message': 'internal error: {}'.format(inst)}, 500
@@ -109,7 +118,7 @@ class W2PDownloadStatsES(Resource):
                 })
     def get(self):
         try:
-            return send_file(os.path.join(settings.ES_FILES, "stats.csv"))
+            return send_file(os.path.join(settings.ES_FILES, "stats.csv"), as_attachment=True)
 
         except Exception as inst:
             return {'message': 'internal error: {}'.format(inst)}, 500

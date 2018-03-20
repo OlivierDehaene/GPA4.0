@@ -1,8 +1,9 @@
-version: '3'
+version: '2.3'
 
 services:
 
   tf_serving_w2p_models_server:
+    runtime: nvidia
     container_name: tf_serving_w2p_models_server
     image: $USER/tf_serving_w2p_models_gpu
     command: /usr/local/bin/tensorflow_model_server --port=9000 --model_config_file=/serving/models/model_list.conf &> logs &

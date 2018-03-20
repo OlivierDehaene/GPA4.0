@@ -90,6 +90,7 @@ def _open_tf_server_channel(server_name, server_port):
 
     return stub
 
+
 def _format_phon(phon):
     values = phon.int_val
     shape1 = phon.tensor_shape.dim[0].size
@@ -108,6 +109,7 @@ def _format_att_mat(att_mat):
     elif len(att_mat.tensor_shape.dim) == 3:
         shape3 = att_mat.tensor_shape.dim[2].size
         return np.reshape(values, [shape1, shape2, shape3])
+
 
 def _make_translation(input, model_name, stub):
     translation_request = _create_translate_request(input, model_name)
@@ -245,6 +247,7 @@ def g2p_mapping_once(input, model_name, vocab=None):
 
     return _mapping(input, phon, sum_all_layers)
 
+
 def g2p_mapping_batch(batch_input, model_name, vocab=None):
     """
     Predict the phonetic translation of a word using a Transformer model
@@ -255,7 +258,8 @@ def g2p_mapping_batch(batch_input, model_name, vocab=None):
     """
 
     # get TensorFlow server connection parameters
-    server_name, server_port = "0.0.0.0", "9000"
+    server_name, server_port = _get_tf_serving_server_connection_params()
+    log.info('Connecting to TensorFlow server %s:%s', server_name, server_port)
 
     # open channel to tensorflow server
     stub = _open_tf_server_channel(server_name, server_port)
@@ -264,11 +268,11 @@ def g2p_mapping_batch(batch_input, model_name, vocab=None):
     batch_phon, batch_sum_all_layers = _make_prediction_batch(batch_input, model_name, stub, vocab)
 
     # make prediction
-    return [_mapping(input, batch_phon[idx], batch_sum_all_layers[idx, :len(batch_phon[idx]), :len(input)]) for idx, input in enumerate(batch_input)]
+    return [_mapping(input, batch_phon[idx], batch_sum_all_layers[idx, :len(batch_phon[idx]), :len(input)]) for
+            idx, input in enumerate(batch_input)]
 
 
-def g2p_mapping_file(corpus, progression, model_name, vocab=None):
-    gpProg = _load_gp_prog(progression)
+def g2p_mapping_file(corpus, gpProg, model_name, vocab=None):
 
     # get TensorFlow server connection parameters
     server_name, server_port = _get_tf_serving_server_connection_params()
@@ -289,9 +293,10 @@ def g2p_mapping_file(corpus, progression, model_name, vocab=None):
     wordGp = _get_unique_words(wordGp)
     wordList = _generate_word_list(wordGp, gpProg)
 
-    path = os.path.join(settings.FR_FILES, "results.csv")
+    path = os.path.join(settings.W2P_DIR, "results.csv")
     wordList.to_csv(path, encoding="UTF-8")
-    return send_file(path)
+    return send_file(path, as_attachment=True)
+
 
 def _normalize(matrix):
     """
@@ -357,17 +362,9 @@ def _mapping(inp_text, out_text, sum_all_layers):
     mapping = []
     for phon, letters in groupby(g_p, lambda x: x[1]):
         graph = "".join([letter[0] for letter in letters])
-        mapping.append(graph + "-" + phon)
+        mapping.append(graph + "~" + phon)
 
     return ["".join(inp_text), " ".join(out_text), mapping]
-
-
-def _load_gp_prog(progression):
-    gpProg = pd.read_csv(os.path.join(settings.FR_FILES, 'gp_prog.csv'), sep=";")
-    gpProg.columns = [["GP", "LESSON"]]
-    gpProg = gpProg.loc[gpProg["GP"].notnull()]
-
-    return gpProg
 
 
 def _get_unique_words(wordGp):
@@ -390,12 +387,12 @@ def _generate_word_list(wordGp, gpProg):
                 if gp == lesson["GP"]:
                     gpMatch.remove(gp)
             if len(gpMatch) == 0:
-                tempList.append(((int(lesson["LESSON"])), ("").join(word), ("-").join(pred), (".").join(copy)))
+                tempList.append(((int(lesson["LESSON"])), ("").join(word), ("~").join(pred), (".").join(copy)))
                 wordGp.remove((word, pred, gpMatch, copy))
     for word, pred, gpMatch, copy in wordGp[:]:
-        tempList.append((999, ("").join(word), ("-").join(pred), (".").join(copy)))
+        tempList.append((999, ("").join(word), ("~").join(pred), (".").join(copy)))
 
     wordList = pd.DataFrame()
     wordList = wordList.append(tempList, ignore_index=True)
-    wordList.columns = [["LESSON", "GRAPHEME", "PHONEME", "GPMATCH"]]
+    wordList.columns = [["LESSON", "GRAPHEME", "PHONEME", "GP"]]
     return wordList

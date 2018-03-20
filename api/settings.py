@@ -30,4 +30,4 @@ ES_FILES = W2P_DIR + 'es/'
 
 EN_MODEL_NAME = 'w2p_en'
 EN_FILES = W2P_DIR + 'en/'
-EN_VOCAB_FILE = W2P_DIR + 'en/en_vocab'
+EN_VOCAB_FILE = W2P_DIR + 'en/vocab'
