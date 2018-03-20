@@ -31,6 +31,7 @@ def __get_flask_server_params__():
 
     return server_name, server_port, flask_debug
 
+
 def configure_app(flask_app, server_name, server_port):
     '''
     Configure Flask application
@@ -42,6 +43,7 @@ def configure_app(flask_app, server_name, server_port):
     flask_app.config['RESTPLUS_VALIDATE'] = settings.RESTPLUS_VALIDATE
     flask_app.config['RESTPLUS_MASK_SWAGGER'] = settings.RESTPLUS_MASK_SWAGGER
     flask_app.config['ERROR_404_HELP'] = settings.RESTPLUS_ERROR_404_HELP
+
 
 def initialize_app(flask_app, server_name, server_port):
     '''
@@ -65,8 +67,9 @@ def main():
     initialize_app(app, server_name, server_port)
     log.info(
         '>>>>> Starting TF Serving client at http://{}/ >>>>>'.format(app.config['SERVER_NAME'])
-        )
+    )
     app.run(host="0.0.0.0")
+
 
 if __name__ == '__main__':
     main()

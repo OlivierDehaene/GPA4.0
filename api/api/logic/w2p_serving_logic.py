@@ -244,8 +244,9 @@ def g2p_mapping_once(input, model_name, vocab=None):
     phon, sum_all_layers = _make_prediction(input, model_name, stub, vocab)
 
     # make prediction
+    mapping = _mapping(input, phon, sum_all_layers)
 
-    return _mapping(input, phon, sum_all_layers)
+    return [input, phon, mapping]
 
 
 def g2p_mapping_batch(batch_input, model_name, vocab=None):
@@ -268,28 +269,31 @@ def g2p_mapping_batch(batch_input, model_name, vocab=None):
     batch_phon, batch_sum_all_layers = _make_prediction_batch(batch_input, model_name, stub, vocab)
 
     # make prediction
-    return [_mapping(input, batch_phon[idx], batch_sum_all_layers[idx, :len(batch_phon[idx]), :len(input)]) for
+    mapping_batch = [_mapping(input, batch_phon[idx], batch_sum_all_layers[idx, :len(batch_phon[idx]), :len(input)]) for
             idx, input in enumerate(batch_input)]
+
+    return batch_input, batch_phon, mapping_batch
 
 
 def g2p_mapping_file(corpus, gpProg, model_name, vocab=None):
-
-    # get TensorFlow server connection parameters
-    server_name, server_port = _get_tf_serving_server_connection_params()
-    log.info('Connecting to TensorFlow server %s:%s', server_name, server_port)
-
-    # open channel to tensorflow server
-    stub = _open_tf_server_channel(server_name, server_port)
-
     # get phonetic translation and attention matrices
-    phon_results = []
-    g_p_results = []
-    for word in corpus:
-        phon, sum_all_layers = _make_prediction(word, model_name, stub, vocab)
-        phon_results.append(phon)
-        g_p_results.append(_mapping(word, phon, sum_all_layers)[2])
+    batch_size = 64 #conservative batch size to dodge out of memory issues
+    wordCount = len(corpus)
 
-    wordGp = list(zip(corpus, phon_results, deepcopy(g_p_results), deepcopy(g_p_results)))
+    phon_results = []
+    gp_results = []
+
+    n_batch = wordCount // batch_size
+    for idx_batch in range(n_batch + 1):
+        try:
+            batch = corpus[idx_batch * batch_size:(idx_batch + 1) * batch_size]
+        except:
+            batch = corpus[n_batch * batch_size:]
+        _, batch_phon_results, batch_gp_results = g2p_mapping_batch(batch, model_name, vocab)
+        phon_results.extend(batch_phon_results)
+        gp_results.extend(batch_gp_results)
+
+    wordGp = list(zip(corpus, phon_results, deepcopy(gp_results), deepcopy(gp_results)))
     wordGp = _get_unique_words(wordGp)
     wordList = _generate_word_list(wordGp, gpProg)
 
@@ -364,7 +368,7 @@ def _mapping(inp_text, out_text, sum_all_layers):
         graph = "".join([letter[0] for letter in letters])
         mapping.append(graph + "~" + phon)
 
-    return ["".join(inp_text), " ".join(out_text), mapping]
+    return mapping
 
 
 def _get_unique_words(wordGp):
@@ -387,12 +391,14 @@ def _generate_word_list(wordGp, gpProg):
                 if gp == lesson["GP"]:
                     gpMatch.remove(gp)
             if len(gpMatch) == 0:
-                tempList.append(((int(lesson["LESSON"])), ("").join(word), ("~").join(pred), (".").join(copy)))
+                tempList.append(((int(lesson["LESSON"])), ("").join(word), (" ").join(pred), (".").join(copy),
+                                 len(word), len(pred)))
+
                 wordGp.remove((word, pred, gpMatch, copy))
     for word, pred, gpMatch, copy in wordGp[:]:
-        tempList.append((999, ("").join(word), ("~").join(pred), (".").join(copy)))
+        tempList.append((999, ("").join(word), (" ").join(pred), (".").join(copy), len(word), len(pred)))
 
     wordList = pd.DataFrame()
     wordList = wordList.append(tempList, ignore_index=True)
-    wordList.columns = [["LESSON", "GRAPHEME", "PHONEME", "GP"]]
+    wordList.columns = [["LESSON", "ORTHOGRAPHY", "PHONOLOGY", "GPMATCH", "N LETTERS", "N PHONEMES"]]
     return wordList

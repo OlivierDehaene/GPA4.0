@@ -1,6 +1,8 @@
 import os
 import logging.config
 import settings
+import pandas as pd
+import io
 
 from flask import request, send_file
 from flask_restplus import Resource
@@ -73,15 +75,22 @@ class W2PFileEN(Resource):
         try:
             files = upload_parser.parse_args()
             corpus_file = files["word_corpus"]
-            progression = files["progression"]
-            corpus = [str(line, 'utf-8').strip() for line in corpus_file.readlines()]
+            progression_file = files["progression"]
+            corpus = [str(line, 'Latin-1').strip() for line in corpus_file.readlines()]
+
+            if progression_file == None:
+                gpProg = pd.read_csv(os.path.join(settings.EN_FILES, 'gp_prog.csv'))
+            else:
+                gpProg = pd.read_csv(io.BytesIO(progression_file.read()))
+
+            gpProg = gpProg.loc[gpProg["GP"].notnull()]
 
         except Exception as inst:
             return {'message': 'something wrong with incoming request. ' +
                                'Original message: {}'.format(inst)}, 400
 
         try:
-            return g2p_mapping_file(corpus, progression, settings.EN_MODEL_NAME, settings.EN_VOCAB_FILE)
+            return g2p_mapping_file(corpus, gpProg, settings.EN_MODEL_NAME)
 
         except Exception as inst:
             return {'message': 'internal error: {}'.format(inst)}, 500
@@ -97,7 +106,7 @@ class W2PDownloadGpProgEN(Resource):
             })
     def get(self):
         try:
-            return send_file(os.path.join(settings.EN_FILES, "gp_prog.csv"))
+            return send_file(os.path.join(settings.EN_FILES, "gp_prog.csv"), as_attachment=True)
 
         except Exception as inst:
             return {'message': 'internal error: {}'.format(inst)}, 500
@@ -113,7 +122,7 @@ class W2PDownloadStatsEN(Resource):
             })
     def get(self):
         try:
-            return send_file(os.path.join(settings.EN_FILES, "stats.csv"))
+            return send_file(os.path.join(settings.EN_FILES, "stats.csv"), as_attachment=True)
 
         except Exception as inst:
             return {'message': 'internal error: {}'.format(inst)}, 500
