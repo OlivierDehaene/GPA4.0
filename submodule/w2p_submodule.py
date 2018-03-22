@@ -16,20 +16,23 @@
 from tensor2tensor.data_generators import problem
 from tensor2tensor.data_generators import text_problems
 from tensor2tensor.data_generators import text_encoder
-from tensor2tensor.data_generators import translate
+from tensor2tensor.models import transformer
 from tensor2tensor.utils import registry
-
-import tensorflow as tf
 
 import six
 import os
 
 
 @registry.register_problem
-class WordToPhoneticVocab(translate.TranslateProblem):
+class WordToPhoneticVocab(text_problems.Text2TextProblem):
+
     @property
-    def approx_vocab_size(self):
-        return 2 ** 8
+    def vocab_type(self):
+        return text_problems.VocabType.TOKEN
+
+    @property
+    def vocab_filename(self):
+        return "vocab"
 
     @property
     def is_generate_per_split(self):
@@ -100,17 +103,10 @@ class WordToPhonetic(text_problems.Text2TextProblem):
             }
 
     def get_or_create_vocab(self, data_dir, tmp_dir, force_get=False):
-        encoder = CustomByteTextEncoder()
+        encoder = LatinByteTextEncoder()
         return encoder
 
-
-# Reserved tokens for things like padding and EOS symbols.
-PAD = "<pad>"
-EOS = "<EOS>"
-RESERVED_TOKENS_BYTES = [bytes(PAD, "ascii"), bytes(EOS, "ascii")]
-
-
-class CustomByteTextEncoder(text_encoder.TextEncoder):
+class LatinByteTextEncoder(text_encoder.TextEncoder):
     """Encodes each byte to an id. For 8-bit strings only."""
 
     def encode(self, s):
@@ -124,24 +120,25 @@ class CustomByteTextEncoder(text_encoder.TextEncoder):
         int2byte = six.int2byte
         for id_ in ids:
             if 0 <= id_ < numres:
-                decoded_ids.append(RESERVED_TOKENS_BYTES[int(id_)])
+                decoded_ids.append(text_encoder.RESERVED_TOKENS_BYTES[int(id_)])
             else:
                 decoded_ids.append(int2byte(id_ - numres))
 
         return b"".join(decoded_ids).decode("Latin-1", "replace")
 
-    def decode_list(self, ids):
-        numres = self._num_reserved_ids
-        decoded_ids = []
-        int2byte = six.int2byte
-        for id_ in ids:
-            if 0 <= id_ < numres:
-                decoded_ids.append(RESERVED_TOKENS_BYTES[int(id_)])
-            else:
-                decoded_ids.append(int2byte(id_ - numres))
+    # @property
+    # def vocab_size(self):
+    #     return 2 ** 8 + self._num_reserved_ids
 
-        return decoded_ids
-
-    @property
-    def vocab_size(self):
-        return 2 ** 8 + self._num_reserved_ids
+@registry.register_hparams
+def w2p():
+  hparams = transformer.transformer_base_single_gpu()
+  hparams.clip_grad_norm = 1.0
+  hparams.optimizer = "Adafactor"
+  hparams.learning_rate_schedule = "rsqrt_decay"
+  hparams.learning_rate_warmup_steps = 25000
+  hparams.attention_dropout_broadcast_dims = "0,1"  # batch, heads
+  hparams.relu_dropout_broadcast_dims = "1"  # length
+  hparams.layer_prepostprocess_dropout_broadcast_dims = "1"  # length
+  hparams.batch_size = 18000
+  return hparams
