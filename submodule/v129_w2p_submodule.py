@@ -152,5 +152,5 @@ def csv_generator(source_path, encoder, sep=";", eos=None, split_source=False, s
 def w2p():
     hparams = transformer.transformer_base_single_gpu()
     hparams.clip_grad_norm = 1.0
-    hparams.batch_size = 14000 # Reduce this number if you have Out Of Memory (OOM) errors. Works on a 1080 TI
+    hparams.batch_size = 13250 # Reduce this number if you have Out Of Memory (OOM) errors. Works on a 1080 TI
     return hparams
