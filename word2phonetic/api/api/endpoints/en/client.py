@@ -13,7 +13,7 @@ from werkzeug.datastructures import FileStorage
 logging.config.fileConfig('logging.conf')
 log = logging.getLogger(__name__)
 
-# create dedicated namespace for spanish client
+# create dedicated namespace for english client
 ns = api.namespace('english', description='Operations for english word to phonetic client')
 
 # Flask-RestPlus specific parser for image uploading

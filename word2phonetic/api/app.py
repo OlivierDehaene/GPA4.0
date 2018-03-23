@@ -4,9 +4,9 @@ import settings
 import utils
 from flask import Flask, Blueprint
 from api.restplus import api
-from api.en.endpoints.client import ns as en_client_namespace
-from api.fr.endpoints.client import ns as es_client_namespace
-from api.es.endpoints.client import ns as fr_client_namespace
+from api.endpoints.en.client import ns as en_client_namespace
+from api.endpoints.fr.client import ns as es_client_namespace
+from api.endpoints.es.client import ns as fr_client_namespace
 from flask_cors import CORS
 
 app = Flask(__name__)
