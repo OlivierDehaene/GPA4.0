@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/Transformer_test.iml" filepath="$PROJECT_DIR$/.idea/Transformer_test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../t2t/tensor2tensor/.idea/tensor2tensor.iml" filepath="$PROJECT_DIR$/../t2t/tensor2tensor/.idea/tensor2tensor.iml" />
+    </modules>
+  </component>
+</project>

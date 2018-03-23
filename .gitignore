@@ -1,3 +1,5 @@
 checkpoints/
 
 data_dir/
+
+word2phonetic/notebooks/\.ipynb_checkpoints/
