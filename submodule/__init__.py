@@ -14,5 +14,4 @@
 # limitations under the License.
 
 """Importing WordToPhonetic submodule"""
-#from . import w2p_submodule
-from . import v129_w2p_submodule
+from . import w2p_submodule

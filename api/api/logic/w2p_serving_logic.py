@@ -235,7 +235,8 @@ def g2p_mapping_once(input, model_name, vocab=None):
     """
 
     # get TensorFlow server connection parameters
-    server_name, server_port = "0.0.0.0", "9000"
+    server_name, server_port = _get_tf_serving_server_connection_params()
+    log.info('Connecting to TensorFlow server %s:%s', server_name, server_port)
 
     # open channel to tensorflow server
     stub = _open_tf_server_channel(server_name, server_port)

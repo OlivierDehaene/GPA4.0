@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2018 The Tensor2Tensor Authors.
+# Copyright 2018 Olivier Dehaene.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ from tensor2tensor.data_generators import text_problems
 from tensor2tensor.data_generators import text_encoder
 from tensor2tensor.models import transformer
 from tensor2tensor.utils import registry
+
+import tensorflow as tf
 
 import six
 import os
@@ -52,16 +54,17 @@ class WordToPhoneticVocab(text_problems.Text2TextProblem):
         }]
 
     def generate_samples(self, data_dir, tmp_dir, dataset_split):
-        filename = os.path.join(data_dir, 'train_dataset.csv')
-        with open(filename, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-
-        for line in lines:
-            ortho, phon = line.strip().split(";")
-            yield {
-                "inputs": " ".join(list(ortho)).strip(),
-                "targets": phon
-            }
+        sep=";"
+        source_path = os.path.join(data_dir, 'train_dataset.csv')
+        with tf.gfile.GFile(source_path, mode="r") as source_file:
+            for line in source_file:
+                if line and sep in line:
+                    parts = line.split(sep, 1)
+                    source, target = parts[0].strip(), parts[1].strip()
+                    yield {
+                        "inputs": " ".join(list(source)),
+                        "targets": target
+                    }
 
 
 @registry.register_problem
@@ -126,19 +129,10 @@ class LatinByteTextEncoder(text_encoder.TextEncoder):
 
         return b"".join(decoded_ids).decode("Latin-1", "replace")
 
-    # @property
-    # def vocab_size(self):
-    #     return 2 ** 8 + self._num_reserved_ids
 
 @registry.register_hparams
 def w2p():
-  hparams = transformer.transformer_base_single_gpu()
+  hparams = transformer.transformer_big_single_gpu()
   hparams.clip_grad_norm = 1.0
-  hparams.optimizer = "Adafactor"
-  hparams.learning_rate_schedule = "rsqrt_decay"
-  hparams.learning_rate_warmup_steps = 25000
-  hparams.attention_dropout_broadcast_dims = "0,1"  # batch, heads
-  hparams.relu_dropout_broadcast_dims = "1"  # length
-  hparams.layer_prepostprocess_dropout_broadcast_dims = "1"  # length
-  hparams.batch_size = 18000
+  hparams.batch_size = 4500
   return hparams
