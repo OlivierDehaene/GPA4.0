@@ -24,6 +24,9 @@ import tensorflow as tf
 import six
 import os
 
+DATASET_FILE = "train_dataset.csv"
+CSV_SEPARATOR = ";"
+
 
 @registry.register_problem
 class WordToPhoneticVocab(text_problems.Text2TextProblem):
@@ -54,12 +57,11 @@ class WordToPhoneticVocab(text_problems.Text2TextProblem):
         }]
 
     def generate_samples(self, data_dir, tmp_dir, dataset_split):
-        sep=";"
-        source_path = os.path.join(data_dir, 'train_dataset.csv')
+        source_path = os.path.join(data_dir, DATASET_FILE)
         with tf.gfile.GFile(source_path, mode="r") as source_file:
             for line in source_file:
-                if line and sep in line:
-                    parts = line.split(sep, 1)
+                if line and CSV_SEPARATOR in line:
+                    parts = line.split(CSV_SEPARATOR, 1)
                     source, target = parts[0].strip(), parts[1].strip()
                     yield {
                         "inputs": " ".join(list(source)),
@@ -94,16 +96,16 @@ class WordToPhonetic(text_problems.Text2TextProblem):
         }]
 
     def generate_samples(self, data_dir, tmp_dir, dataset_split):
-        filename = os.path.join(data_dir, 'train_dataset.csv')
-        with open(filename, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-
-        for line in lines:
-            ortho, phon = line.strip().split(",")
-            yield {
-                "inputs": ortho,
-                "targets": phon
-            }
+        source_path = os.path.join(data_dir, DATASET_FILE)
+        with tf.gfile.GFile(source_path, mode="r") as source_file:
+            for line in source_file:
+                if line and CSV_SEPARATOR in line:
+                    parts = line.split(CSV_SEPARATOR, 1)
+                    source, target = parts[0].strip(), parts[1].strip()
+                    yield {
+                        "inputs": source,
+                        "targets": target
+                    }
 
     def get_or_create_vocab(self, data_dir, tmp_dir, force_get=False):
         encoder = LatinByteTextEncoder()
