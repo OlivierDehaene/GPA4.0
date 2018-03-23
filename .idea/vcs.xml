@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="VcsDirectoryMappings">
-    <mapping directory="$PROJECT_DIR$/../suniFlaskAPI" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../t2t/tensor2tensor" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../transformer_API" vcs="Git" />
-  </component>
-</project>
