@@ -25,7 +25,7 @@ import six
 import os
 
 DATASET_FILE = "train_dataset.csv"
-CSV_SEPARATOR = ";"
+CSV_SEPARATOR = ","
 
 
 @registry.register_problem
@@ -131,10 +131,17 @@ class LatinByteTextEncoder(text_encoder.TextEncoder):
 
         return b"".join(decoded_ids).decode("Latin-1", "replace")
 
+    @property
+    def vocab_size(self):
+        return 2 ** 8 + self._num_reserved_ids
+
 
 @registry.register_hparams
 def w2p():
-  hparams = transformer.transformer_big_single_gpu()
+  hparams = transformer.transformer_base_single_gpu()
   hparams.clip_grad_norm = 1.0
-  hparams.batch_size = 4500
+  hparams.batch_size = 8000
+  # hparams.local_eval_frequency = 500
+  # hparams.train_steps = 20000
+  # hparams.keep_checkpoint_max = 40
   return hparams

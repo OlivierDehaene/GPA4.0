@@ -11,9 +11,9 @@ setup(
     license='Apache 2.0',
     packages=find_packages(),
     scripts=[
-        'word2phonetic/utils/create_vocab',
-        'word2phonetic/utils/dataset_train_test_split',
-        'word2phonetic/utils/export_model'
+        'word2phonetic/utils/create_vocab.py',
+        'word2phonetic/utils/dataset_train_test_split.py',
+        'word2phonetic/utils/export_model.py'
     ],
     install_requires=[
         'tensor2tensor==1.5.5',

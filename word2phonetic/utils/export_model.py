@@ -146,7 +146,7 @@ def _load_model(model_dir, sess):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--checkpoint', type=str, required=True)
+    parser.add_argument('--checkpoint_dir', type=str, required=True)
     parser.add_argument('--output_dir', type=str, required=True)
     parser.add_argument('--problem_name', type=str, required=True)
     parser.add_argument('--data_dir', type=str, default="")
@@ -160,7 +160,7 @@ def main():
 
     sess = tf.Session()
 
-    assert _load_model(args.checkpoint, sess)
+    assert _load_model(args.checkpoint_dir, sess)
 
     export_model(sess=sess, input_tensor=inputs, output_phon_tensor=samples, input_phon_tensor=targets,
                  att_mats_list=att_mats, output_dir=args.output_dir)
