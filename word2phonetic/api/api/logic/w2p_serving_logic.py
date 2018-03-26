@@ -206,12 +206,12 @@ def _char_decode(input):
 
 def _vocab_encode(input, vocab, padding_to=None):
     with open(vocab, "r") as f:
-        vocab_arr = [l.strip()[1:-1] for l in f.readlines()]
+        vocab_arr = [l.strip() for l in f.readlines()]
 
     try:
-        inp = [np.where(np.array(vocab_arr) == (c.upper() + "_"))[0][0] for c in input] + [1]
+        inp = [np.where(np.array(vocab_arr) == (c.upper()))[0][0] for c in input] + [1]
     except:
-        print(input)
+        print("Vocab error : {}".format(inp))
     if padding_to:
         for _ in range(padding_to - len(inp)):
             inp += [0]
@@ -221,7 +221,7 @@ def _vocab_encode(input, vocab, padding_to=None):
 
 def _vocab_decode(input, vocab):
     with open(vocab, "r") as f:
-        vocab_arr = [l.strip()[1:-1] for l in f.readlines()]
+        vocab_arr = [l.strip() for l in f.readlines()]
     return [vocab_arr[i][:-1] for i in input if i > 1]
 
 
