@@ -1,9 +1,8 @@
 # Word2Phonetic
 
 [Word2Phonetic](https://github.com/OlivierDehaene/word2phonetic), or
-[w2p](https://github.com/OlivierDehaene/word2phonetic) is a submodule developed for the [Tensor2Tensor](https://github.com/tensorflow/tensor2tensor) library. 
-It provides an easy to use grapheme-phoneme alignement tool for any given language.
-[Find out more](http://www.unicog.org/).
+[w2p](https://github.com/OlivierDehaene/word2phonetic) is a submodule developed for the [Tensor2Tensor](https://github.com/tensorflow/tensor2tensor) library. It does Grapheme-to-Phoneme (G2P) conversion and Grapheme-Phoneme-Alignement using the Transformer model. Transformer is a sequence-to-sequence model that was successfully applied to numerous tasks, including Neural Machine Translation [[1]](https://arxiv.org/pdf/1706.03762.pdf). G2P is a task that was solved in the past using LSTM RNN based architectures [[2]](https://arxiv.org/pdf/1506.00196.pdf) [[3]](https://arxiv.org/pdf/1610.06540.pdf). We build on these results and propose a new G2P and semi-supervised GPAlignement tool.
+[Find out more](https://github.com/OlivierDehaene/word2phonetic/wiki).
 
 
 ### Quick Start
@@ -38,5 +37,3 @@ w2p-decoder
 # See the phonology translation and the grapheme-phoneme alignement
 cat translation.en
 ```
-
-Go to the [Wiki](https://github.com/OlivierDehaene/word2phonetic/wiki) page for more informations.
