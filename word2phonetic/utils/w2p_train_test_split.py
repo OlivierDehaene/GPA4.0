@@ -18,7 +18,7 @@ def train_test_split_dataset(dataframe, output_dir, test_size=0.25, seed=123):
     test_dataset = pd.DataFrame({"Input": txt_test, "Phon": phon_test})
     test_dataset.to_csv(os.path.join(output_dir, "test_dataset.csv"), header=False, index=False)
 
-def main():
+def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_path', type=str, required=True)
     parser.add_argument('--output_dir', type=str, required=True)

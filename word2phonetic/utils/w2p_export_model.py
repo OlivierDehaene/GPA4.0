@@ -148,7 +148,7 @@ def _load_model(model_dir, sess):
     return False
 
 
-def main():
+def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--checkpoint_dir', type=str, required=True)
     parser.add_argument('--output_dir', type=str, required=True)

@@ -10,10 +10,16 @@ setup(
     url='https://github.com/OlivierDehaene/word2phonetic',
     license='Apache 2.0',
     packages=find_packages(),
+    package_data={
+        'w2p.notebooks': [
+            'stats_gp_prog.ipynb'
+        ],
+    },
     scripts=[
-        'word2phonetic/utils/create_vocab.py',
-        'word2phonetic/utils/dataset_train_test_split.py',
-        'word2phonetic/utils/export_model.py'
+        'word2phonetic/utils/w2p_create_vocab',
+        'word2phonetic/utils/w2p_train_test_split',
+        'word2phonetic/utils/w2p_export_model',
+        'word2phonetic/utils/w2p_train',
     ],
     install_requires=[
         'tensor2tensor==1.5.5',

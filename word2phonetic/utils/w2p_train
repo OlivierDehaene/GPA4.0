@@ -1,0 +1,9 @@
+from word2phonetic.utils import w2p_train
+
+import tensorflow as tf
+
+def main(argv):
+    w2p_train.main(argv)
+
+if __name__ == "__main__":
+    tf.app.run()

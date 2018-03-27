@@ -38,7 +38,7 @@ def create_vocab(dataframe, output_dir, phoneme_separator):
         for token, count in token_with_counts:
             f.write(token + "\n")
 
-def main():
+def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_path', type=str, required=True)
     parser.add_argument('--output_dir', type=str, required=True)
