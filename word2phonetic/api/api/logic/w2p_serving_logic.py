@@ -328,7 +328,7 @@ def _mapping(inp_text, out_text, sum_all_layers):
                               if sum_all_layers[idx, i] < np.mean(sum_all_layers[idx, :])
                               + threshold * np.std(sum_all_layers[idx, :])]
         # Reduces threshold if too many silent letters are detected
-        # Can happen in french when we have 3 lettres graphemes
+        # Can happen in french when we have 3 letters graphemes
         if len(silent_letters_idx) > 1 / 3 * len(inp_text):
             threshold -= 0.1
         else:
@@ -353,12 +353,6 @@ def _mapping(inp_text, out_text, sum_all_layers):
                 phon_list[np.argmax(sum_all_layers[i, :])] += phon
         elif discard_next:
             discard_next = False
-
-    # test = np.where(np.array(phon_list) == phon)[0]
-    #     if len(test > 1):
-    #         phon_list[np.max(test)] = "%"
-
-    ##NOT WORKING PROPERLY
 
     # Creates the g_p tupple list
     g_p = [(l, phon_list[i]) for i, l in enumerate(inp_text)]
