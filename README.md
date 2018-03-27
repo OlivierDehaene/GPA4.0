@@ -39,4 +39,4 @@ w2p-decoder
 cat translation.en
 ```
 
-Go to the [Wiki] page for more informations.
+Go to the [Wiki](https://github.com/OlivierDehaene/word2phonetic/wiki) page for more informations.
