@@ -21,7 +21,10 @@ def create_vocab(dataframe, output_dir, phoneme_separator):
 
     for phonetic_word in dataframe["PHON"]:
         phonetic_word = str(phonetic_word)
-        tokens = phonetic_word.strip().split(phoneme_separator)
+        if phoneme_separator != "":
+            tokens = phonetic_word.strip().split(phoneme_separator)
+        else:
+            tokens = list(phonetic_word.strip())
 
         tokens = [_ for _ in tokens if len(_) > 0]
         cnt.update(tokens)
@@ -42,8 +45,8 @@ def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_path', type=str, required=True)
     parser.add_argument('--output_dir', type=str, required=True)
-    parser.add_argument('--csv_sep', type=str, default=";")
-    parser.add_argument('--phoneme_sep', type=str, default=" ")
+    parser.add_argument('--csv_sep', type=str, default=",")
+    parser.add_argument('--phoneme_sep', type=str, default="")
     args = parser.parse_args()
 
     df = pd.read_csv(args.dataset_path, sep=args.csv_sep, header=None)

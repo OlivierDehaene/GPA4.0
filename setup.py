@@ -16,13 +16,16 @@ setup(
         ],
     },
     scripts=[
-        'word2phonetic/utils/w2p_create_vocab',
-        'word2phonetic/utils/w2p_train_test_split',
-        'word2phonetic/utils/w2p_export_model',
-        'word2phonetic/utils/w2p_train',
+        'word2phonetic/utils/w2p-create_vocab',
+        'word2phonetic/utils/w2p-decoder',
+        'word2phonetic/utils/w2p-stats',
+        'word2phonetic/utils/w2p-evaluate',
+        'word2phonetic/utils/w2p-train_test_split',
+        'word2phonetic/utils/w2p-export_model',
+        'word2phonetic/utils/w2p-train',
     ],
     install_requires=[
-        'tensor2tensor==1.5.5',
+        'tensor2tensor==1.6.2',
         'tensorflow>=1.4.1',
         'pandas'
     ],

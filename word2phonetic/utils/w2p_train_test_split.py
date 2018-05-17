@@ -24,7 +24,7 @@ def main(argv):
     parser.add_argument('--output_dir', type=str, required=True)
     parser.add_argument('--test_size', type=float, default=0.25)
     parser.add_argument('--seed', type=int, default=123)
-    parser.add_argument('--csv_sep', type=str, default=";")
+    parser.add_argument('--csv_sep', type=str, default=",")
     args = parser.parse_args()
 
     df = pd.read_csv(args.dataset_path, sep=args.csv_sep, header=None)

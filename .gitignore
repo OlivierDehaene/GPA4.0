@@ -5,3 +5,7 @@ data_dir/
 word2phonetic/notebooks/\.ipynb_checkpoints/
 
 \.idea/
+
+word2phonetic/utils/__pycache__/
+
+word2phonetic/submodule/__pycache__/

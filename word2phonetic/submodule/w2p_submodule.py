@@ -29,7 +29,7 @@ CSV_SEPARATOR = ","
 
 
 @registry.register_problem
-class WordToPhoneticVocab(text_problems.Text2TextProblem):
+class WordToPhonetic(text_problems.Text2TextProblem):
 
     @property
     def vocab_type(self):
@@ -51,10 +51,12 @@ class WordToPhoneticVocab(text_problems.Text2TextProblem):
         return [{
             "split": problem.DatasetSplit.TRAIN,
             "shards": 9,
-        }, {
+        },
+            {
             "split": problem.DatasetSplit.EVAL,
             "shards": 1,
-        }]
+        }
+        ]
 
     def generate_samples(self, data_dir, tmp_dir, dataset_split):
         source_path = os.path.join(data_dir, DATASET_FILE)
@@ -63,77 +65,17 @@ class WordToPhoneticVocab(text_problems.Text2TextProblem):
                 if line and CSV_SEPARATOR in line:
                     parts = line.split(CSV_SEPARATOR, 1)
                     source, target = parts[0].strip(), parts[1].strip()
-                    yield {
-                        "inputs": " ".join(list(source)),
-                        "targets": target
-                    }
-
-
-@registry.register_problem
-class WordToPhonetic(text_problems.Text2TextProblem):
-    """Predict phonetic from words/pseudo-words"""
-
-    @property
-    def vocab_type(self):
-        # `ByteTextEncoder`, encode raw bytes.
-        return text_problems.VocabType.CHARACTER
-
-    @property
-    def is_generate_per_split(self):
-        # generate_data will shard the data into TRAIN and EVAL for us.
-        return False
-
-    @property
-    def dataset_splits(self):
-        """Splits of data to produce and number of output shards for each."""
-        # 10% evaluation data
-        return [{
-            "split": problem.DatasetSplit.TRAIN,
-            "shards": 9,
-        }, {
-            "split": problem.DatasetSplit.EVAL,
-            "shards": 1,
-        }]
-
-    def generate_samples(self, data_dir, tmp_dir, dataset_split):
-        source_path = os.path.join(data_dir, DATASET_FILE)
-        with tf.gfile.GFile(source_path, mode="r") as source_file:
-            for line in source_file:
-                if line and CSV_SEPARATOR in line:
-                    parts = line.split(CSV_SEPARATOR, 1)
-                    source, target = parts[0].strip(), parts[1].strip()
-                    yield {
-                        "inputs": source,
-                        "targets": target
-                    }
-
-    def get_or_create_vocab(self, data_dir, tmp_dir, force_get=False):
-        encoder = LatinByteTextEncoder()
-        return encoder
-
-class LatinByteTextEncoder(text_encoder.TextEncoder):
-    """Encodes each byte to an id. For 8-bit strings only."""
-
-    def encode(self, s):
-        numres = self._num_reserved_ids
-
-        return [c + numres for c in s.encode("Latin-1")]
-
-    def decode(self, ids):
-        numres = self._num_reserved_ids
-        decoded_ids = []
-        int2byte = six.int2byte
-        for id_ in ids:
-            if 0 <= id_ < numres:
-                decoded_ids.append(text_encoder.RESERVED_TOKENS_BYTES[int(id_)])
-            else:
-                decoded_ids.append(int2byte(id_ - numres))
-
-        return b"".join(decoded_ids).decode("Latin-1", "replace")
-
-    @property
-    def vocab_size(self):
-        return 2 ** 8 + self._num_reserved_ids
+                    if len(target.split(" ")) > 1:
+                        print(target, target.split(" "))
+                        yield {
+                            "inputs": " ".join(list(source)),
+                            "targets": target
+                        }
+                    else:
+                        yield {
+                            "inputs": " ".join(list(source)),
+                            "targets": " ".join(list(target))
+                        }
 
 
 @registry.register_hparams

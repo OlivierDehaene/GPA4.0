@@ -26,6 +26,7 @@ from tensor2tensor.utils import registry
 from tensor2tensor.utils import trainer_lib
 from tensor2tensor.utils import usr_dir
 
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 def get_att_mats(translate_model):
     """
@@ -152,11 +153,11 @@ def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--checkpoint_dir', type=str, required=True)
     parser.add_argument('--output_dir', type=str, required=True)
-    parser.add_argument('--problem_name', type=str, required=True)
-    parser.add_argument('--data_dir', type=str, default="")
+    parser.add_argument('--data_dir', type=str, required=True)
+    parser.add_argument('--problem_name', type=str, default="word_to_phonetic")
     parser.add_argument('--model_name', type=str, default="transformer")
     parser.add_argument('--hparams_set', type=str, default="w2p")
-    parser.add_argument('--t2t_usr_dir', type=str, default="../submodule")
+    parser.add_argument('--t2t_usr_dir', type=str, default=os.path.join(__location__, "../submodule"))
     args = parser.parse_args()
 
     usr_dir.import_usr_dir(args.t2t_usr_dir)
