@@ -1,7 +1,7 @@
 import logging
 import settings
 import os
-import utils
+import decoding_utils
 
 import tensorflow as tf
 import numpy as np
@@ -25,8 +25,8 @@ def _get_tf_serving_server_connection_params():
 
     :return: Tuple of TF server name and server port
     """
-    server_name = utils.get_env_var_setting('TF_W2P_SERVER_NAME', settings.DEFAULT_TF_W2P_SERVER_NAME)
-    server_port = utils.get_env_var_setting('TF_W2P_SERVER_PORT', settings.DEFAULT_TF_W2P_SERVER_PORT)
+    server_name = decoding_utils.get_env_var_setting('TF_W2P_SERVER_NAME', settings.DEFAULT_TF_W2P_SERVER_NAME)
+    server_port = decoding_utils.get_env_var_setting('TF_W2P_SERVER_PORT', settings.DEFAULT_TF_W2P_SERVER_PORT)
 
     return server_name, server_port
 

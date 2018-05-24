@@ -28,24 +28,34 @@ def get_att_mats(translate_model):
     :param translate_model: Transformer object to fetch the attention weights from.
     :return:
     """
+    enc_atts = []
+    dec_atts = []
     encdec_atts = []
 
     prefix = 'transformer/body/'
     postfix = '/multihead_attention/dot_product_attention'
 
     for i in range(translate_model.hparams.num_hidden_layers):
+        enc_att = translate_model.attention_weights[
+            '%sencoder/layer_%i/self_attention%s' % (prefix, i, postfix)]
+        dec_att = translate_model.attention_weights[
+            '%sdecoder/layer_%i/self_attention%s' % (prefix, i, postfix)]
         encdec_att = translate_model.attention_weights[
             '%sdecoder/layer_%i/encdec_attention%s' % (prefix, i, postfix)]
+        enc_atts.append(enc_att)
+        dec_atts.append(dec_att)
         encdec_atts.append(encdec_att)
 
-    selected_heads = [0, 4,
-                      5]  # in our experience, the first, the second last and the last layers are the most interpretable
-    att_mats = [tf.squeeze(tf.reduce_sum(encdec_atts[head], axis=1)) for head in selected_heads]
+    selected_heads = [0, 1,
+                      2]  # in our experience, the first, the second last and the last layers are the most interpretable
+    encdec_att_mats = [tf.squeeze(tf.reduce_sum(encdec_atts[head], axis=1)) for head in selected_heads]
+    enc_att_mats = [tf.squeeze(tf.reduce_sum(enc_atts[head], axis=1)) for head in selected_heads]
+    dec_att_mats = [tf.squeeze(tf.reduce_sum(dec_atts[head], axis=1)) for head in selected_heads]
 
-    return att_mats
+    return encdec_att_mats
 
 
-def build_model(hparams_set, model_name, data_dir, problem_name, beam_size=1):
+def build_model(hparams_set, model_name, data_dir, problem_name, beam_size=1, top_beams=1):
     """Build the graph required to featch the attention weights.
 
     Args:
@@ -86,7 +96,7 @@ def build_model(hparams_set, model_name, data_dir, problem_name, beam_size=1):
     with tf.variable_scope(tf.get_variable_scope(), reuse=True):
         samples = translate_model.infer({
             'inputs': inputs,
-        }, beam_size=beam_size)['outputs']
+        }, beam_size=beam_size, top_beams=top_beams, alpha=0.6)['outputs']
 
     return inputs, targets, samples, att_mats
 
@@ -172,6 +182,21 @@ def _make_prediction_batch(sess, batch_input, input_tensor, input_phon_tensor, o
 
     return batch_phon, batch_sum_all_layers
 
+def _make_translation_batch(sess, batch_input, input_tensor, output_phon_tensor, top_beams,
+                           encoder):
+    padding_to = len(max(batch_input, key=len)) + 1
+
+    batch_input_tokenized = np.stack([_encode(input, encoder, padding_to).squeeze(0) for input in batch_input], 0)
+
+    batch_phon_tokenized = sess.run(output_phon_tensor, feed_dict={input_tensor: batch_input_tokenized})
+
+    batch_phon = []
+    for phon_tokenized_beam in batch_phon_tokenized:
+        if top_beams > 1:
+            batch_phon.append(["".join(_decode(phon_tokenized, encoder)) for phon_tokenized in phon_tokenized_beam])
+        else:
+            batch_phon.append(["".join(_decode(phon_tokenized_beam, encoder))])
+    return batch_phon
 
 def g2p_mapping_batch(sess, batch_input, input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list,
                       encoder):
@@ -216,9 +241,12 @@ def _mapping(inp_text, out_text, sum_all_layers):
     while (True):
         # Gets the silent_letters indices
         # We consider that a letter is silent if its attention value is below mean attention + threshold * std attention
-        silent_letters_idx = [i for i, idx in enumerate(np.argmax(sum_all_layers, axis=0))
-                              if sum_all_layers[idx, i] < np.mean(sum_all_layers[idx, :])
-                              + threshold * np.std(sum_all_layers[idx, :])]
+        try:
+            silent_letters_idx = [i for i, idx in enumerate(np.argmax(sum_all_layers, axis=0))
+                                  if sum_all_layers[idx, i] < np.mean(sum_all_layers[idx, :])
+                                  + threshold * np.std(sum_all_layers[idx, :])]
+        except:
+            print(inp_text, out_text, sum_all_layers.shape)
         # Reduces threshold if too many silent letters are detected
         # Can happen in french when we have 3 lettres graphemes
         if len(silent_letters_idx) > 1 / 3 * len(inp_text):
@@ -294,6 +322,7 @@ def _get_unique_words(wordGp):
 
 def _generate_word_list(wordGp, gpProg=None):
     if gpProg:
+        gpProg = pd.read_csv(gpProg)
         tempList = []
         for i in range(len(gpProg)):
             lesson = gpProg.loc[i]
@@ -349,9 +378,18 @@ def decode_wordList(sess, wordList, input_tensor, input_phon_tensor, output_phon
 
     wordList.to_csv(decode_to_file, encoding="UTF-8")
 
+def prepare_corpus(wordList, phon):
+    corpus = {}
+    for w, p in zip(wordList, phon):
+        if w in corpus:
+            corpus[w].append(p.replace(" ", ""))
+        else:
+            corpus[w] = [p.replace(" ", "")]
+    return corpus
 
-def evaluate_corpus(sess, wordList, phon, input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list, encoder):
+def evaluate_corpus(sess, corpus, input_tensor, output_phon_tensor, encoder, top_beams):
     batch_size = 128  # conservative batch size to dodge out of memory issues
+    wordList = list(corpus.keys())
     wordCount = len(wordList)
 
     phon_results = []
@@ -362,11 +400,11 @@ def evaluate_corpus(sess, wordList, phon, input_tensor, input_phon_tensor, outpu
             batch = wordList[idx_batch * batch_size:(idx_batch + 1) * batch_size]
         except:
             batch = wordList[n_batch * batch_size:]
-        _, batch_phon_results, _ = g2p_mapping_batch(sess, batch, input_tensor, input_phon_tensor,
-                                                                    output_phon_tensor, att_mats_list, encoder)
+        batch_phon_results = _make_translation_batch(sess, batch, input_tensor, output_phon_tensor, top_beams,
+                           encoder)
         phon_results.extend(batch_phon_results)
 
-    rates = error_rates(phon, phon_results)
+    rates = error_rates(corpus, phon_results)
     print("WER : {:.4%} ; PER : {:.4%}".format(rates[0], rates[1]))
 
 
@@ -418,7 +456,7 @@ def stats(sess, wordList, phon, input_tensor, input_phon_tensor, output_phon_ten
     df = df.append(tupList, ignore_index=True)
     df.columns = [["GP", "GP FREQ IN DATASET", "G CONSISTENCY", "P CONSISTENCY"]]
 
-    weights = [50, 10, 40]
+    weights = [50, 30, 20]
     scores = np.dot(weights, np.transpose(df[["GP FREQ IN DATASET", "G CONSISTENCY", "P CONSISTENCY"]]))
     df["SCORE"] = scores
     df.sort_values(["SCORE"], ascending=False, inplace=True)
@@ -449,18 +487,29 @@ def levenshtein(s1, s2):
     return previous_row[-1]
 
 
-def per(s1, s2):
-    return levenshtein(s1, s2) / len(s1)
+def per(gd, pred):
+    min_levenshtein = np.inf
+    length_min_levenshtein_pronunciation = np.inf
+    for beam in pred:
+        for pronunciation in gd:
+            current = levenshtein(pronunciation, beam)
+            if current < min_levenshtein:
+                min_levenshtein = current
+                length_min_levenshtein_pronunciation = len(pronunciation)
+        return min_levenshtein / length_min_levenshtein_pronunciation
 
 
-def wer(s1, s2):
-    return int(s1 != s2)
+def wer(gd, pred):
+    for beam in pred:
+        if beam in gd:
+            return 0
+    return 1
 
-
-def error_rates(s, p):
+def error_rates(corpus, phon_results):
+    wordList = list(corpus.keys())
     perS = 0
     werS = 0
-    for i, _ in tqdm(enumerate(s)):
-        werS += wer(s[i], p[i])
-        perS += per(s[i], p[i])
-    return werS / len(s), perS / len(s)
+    for i, word in tqdm(enumerate(wordList)):
+        werS += wer(corpus[word], phon_results[i])
+        perS += per(corpus[word], phon_results[i])
+    return werS / len(wordList), perS / len(wordList)

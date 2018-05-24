@@ -52,10 +52,13 @@ def main(argv):
             wordList.append(source)
             phon.append(target)
 
+    corpus = decoding_utils.prepare_corpus(wordList, phon)
+
     usr_dir.import_usr_dir(args.t2t_usr_dir)
     input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list = decoding_utils.build_model(args.hparams_set, args.model_name,
                                                                                                     args.data_dir, args.problem_name,
-                                                                                                    beam_size=5)
+                                                                                                    beam_size=5,
+                                                                                                    top_beams=1)
     problem = problems.problem(args.problem_name)
     encoder = problem.feature_encoders(args.data_dir)
 
@@ -63,7 +66,7 @@ def main(argv):
 
     assert decoding_utils._load_model(args.model_dir, sess)
 
-    decoding_utils.evaluate_corpus(sess, wordList, phon, input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list, encoder)
+    decoding_utils.evaluate_corpus(sess, corpus, input_tensor, output_phon_tensor, encoder, 1)
 
 if __name__ == "__main__":
     tf.app.run()

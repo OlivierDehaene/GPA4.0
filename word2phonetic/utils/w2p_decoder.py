@@ -38,6 +38,7 @@ def main(argv):
     parser.add_argument('--model_dir', type=str, required=True)
     parser.add_argument('--data_dir', type=str, required=True)
     parser.add_argument('--gp_prog', type=str, default=None)
+    parser.add_argument('--sep', type=str, default=",")
     parser.add_argument('--problem_name', type=str, default="word_to_phonetic")
     parser.add_argument('--model_name', type=str, default="transformer")
     parser.add_argument('--hparams_set', type=str, default="w2p")
@@ -45,7 +46,7 @@ def main(argv):
     args = parser.parse_args()
 
     with open(args.decode_from_file, 'r') as f:
-        wordList = [line.strip() for line in f.readlines()]
+        wordList = [line.strip().split(args.sep)[0] for line in f.readlines()]
 
     usr_dir.import_usr_dir(args.t2t_usr_dir)
     input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list = decoding_utils.build_model(args.hparams_set, args.model_name,

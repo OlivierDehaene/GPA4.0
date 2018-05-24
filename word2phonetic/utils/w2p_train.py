@@ -16,6 +16,8 @@ def main(argv):
     FLAGS.hparams_set = "w2p"
     FLAGS.model = "transformer"
     FLAGS.problem = "word_to_phonetic"
+    if FLAGS.train_steps == None:
+        FLAGS.train_steps = 10000
     FLAGS.generate_data = True
 
     t2t_trainer.main(argv)

@@ -25,7 +25,7 @@ import six
 import os
 
 DATASET_FILE = "train_dataset.csv"
-CSV_SEPARATOR = ","
+CSV_SEPARATOR = ";"
 
 
 @registry.register_problem
@@ -66,7 +66,6 @@ class WordToPhonetic(text_problems.Text2TextProblem):
                     parts = line.split(CSV_SEPARATOR, 1)
                     source, target = parts[0].strip(), parts[1].strip()
                     if len(target.split(" ")) > 1:
-                        print(target, target.split(" "))
                         yield {
                             "inputs": " ".join(list(source)),
                             "targets": target
@@ -81,9 +80,17 @@ class WordToPhonetic(text_problems.Text2TextProblem):
 @registry.register_hparams
 def w2p():
   hparams = transformer.transformer_base_single_gpu()
-  hparams.clip_grad_norm = 1.0
+  hparams.length_bucket_step=1.5
+  hparams.max_length=30
+  hparams.min_length_bucket=6
   hparams.batch_size = 8000
-  # hparams.local_eval_frequency = 500
-  # hparams.train_steps = 20000
-  # hparams.keep_checkpoint_max = 40
+  hparams.keep_checkpoint_max = 20
+
+  # hparams.batch_size = 20000
+  # hparams.num_heads=4
+  # hparams.filter_size = 512
+  # hparams.hidden_size = 256
+  # hparams.num_hidden_layers=3
+  hparams.layer_prepostprocess_dropout = 0.3
+  hparams.attention_dropout = 0.2
   return hparams
