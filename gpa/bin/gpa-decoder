@@ -1,4 +1,4 @@
-from gpa.utils import gpa_decoder
+from gpa.scripts import gpa_decoder
 
 import tensorflow as tf
 

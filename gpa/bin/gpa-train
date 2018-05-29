@@ -1,4 +1,4 @@
-from gpa.utils import gpa_train
+from gpa.scripts import gpa_train
 
 import tensorflow as tf
 

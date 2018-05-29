@@ -1,4 +1,4 @@
-from gpa.utils import gpa_stats
+from gpa.scripts import gpa_stats
 
 import tensorflow as tf
 

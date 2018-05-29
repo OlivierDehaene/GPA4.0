@@ -27,7 +27,7 @@ from tensor2tensor import problems
 import warnings
 warnings.filterwarnings('ignore')
 
-from gpa.utils.decoding_utils import load_model, build_model, stats
+from gpa.scripts.decoding_utils import load_model, build_model, stats
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 

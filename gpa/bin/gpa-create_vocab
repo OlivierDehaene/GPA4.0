@@ -1,4 +1,4 @@
-from gpa.utils import gpa_create_vocab
+from gpa.scripts import gpa_create_vocab
 
 import tensorflow as tf
 

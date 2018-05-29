@@ -13,3 +13,9 @@ word2phonetic/submodule/__pycache__/
 gpa4\.0\.egg-info/
 
 gpa/utils/__pycache__/
+
+gpa/scripts/__pycache__/
+
+gpa/submodule/__pycache__/
+
+gpa\.egg-info/

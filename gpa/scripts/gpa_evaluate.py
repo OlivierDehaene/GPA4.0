@@ -25,7 +25,7 @@ import tensorflow as tf
 from tensor2tensor.utils import usr_dir
 from tensor2tensor import problems
 
-from gpa.utils.decoding_utils import load_model, prepare_corpus, build_model, evaluate_corpus
+from gpa.scripts.decoding_utils import load_model, prepare_corpus, build_model, evaluate_corpus
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
