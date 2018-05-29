@@ -392,7 +392,7 @@ def _generate_word_list(wordGp, gpProg=None):
 
 def decode_wordList(sess, wordList, input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list, encoder,
                     decode_to_file, gpProg):
-    batch_size = 1024  # conservative batch size to dodge out of memory issues
+    batch_size = 128  # conservative batch size to dodge out of memory issues
     wordCount = len(wordList)
 
     phon_results = []
@@ -425,7 +425,7 @@ def prepare_corpus(wordList, phon):
     return corpus
 
 def evaluate_corpus(sess, corpus, input_tensor, output_phon_tensor, encoder, top_beams):
-    batch_size = 1024  # conservative batch size to dodge out of memory issues
+    batch_size = 128  # conservative batch size to dodge out of memory issues
     wordList = list(corpus.keys())
     wordCount = len(wordList)
 
@@ -446,7 +446,7 @@ def evaluate_corpus(sess, corpus, input_tensor, output_phon_tensor, encoder, top
 
 
 def stats(sess, wordList, phon, input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list, encoder):
-    batch_size = 1024  # conservative batch size to dodge out of memory issues
+    batch_size = 128  # conservative batch size to dodge out of memory issues
     wordCount = len(wordList)
 
     phon_results = []
