@@ -52,7 +52,8 @@ def get_att_mats(translate_model):
     enc_att_mats = [tf.squeeze(tf.reduce_sum(enc_atts[head], axis=1)) for head in selected_heads]
     dec_att_mats = [tf.squeeze(tf.reduce_sum(dec_atts[head], axis=1)) for head in selected_heads]
 
-    return encdec_att_mats
+
+    return encdec_att_mats, enc_att_mats, dec_att_mats
 
 
 def build_model(hparams_set, model_name, data_dir, problem_name, beam_size=1, top_beams=1):
@@ -91,14 +92,14 @@ def build_model(hparams_set, model_name, data_dir, problem_name, beam_size=1, to
     # have been filled with the attention tensors. BUT before creating the
     # interence graph otherwise the dict will be filled with tensors from
     # inside a tf.while_loop from decoding and are marked unfetchable.
-    att_mats = get_att_mats(translate_model)
+    encdec_att_mats, enc_att_mats, dec_att_mats = get_att_mats(translate_model)
 
     with tf.variable_scope(tf.get_variable_scope(), reuse=True):
         samples = translate_model.infer({
             'inputs': inputs,
         }, beam_size=beam_size, top_beams=top_beams, alpha=0.6)['outputs']
 
-    return inputs, targets, samples, att_mats
+    return inputs, targets, samples, encdec_att_mats, enc_att_mats, dec_att_mats
 
 
 def _encode(str_input, encoder, padding_to=None):
@@ -300,7 +301,7 @@ def _dic_add(value, dic):
         dic[value] += 1
 
 
-def _load_model(model_dir, sess):
+def load_model(model_dir, sess):
     ckpt = tf.train.get_checkpoint_state(model_dir)
     if ckpt and ckpt.model_checkpoint_path:
         ckpt_name = os.path.basename(ckpt.model_checkpoint_path)

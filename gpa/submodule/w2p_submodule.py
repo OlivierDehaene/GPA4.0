@@ -25,7 +25,6 @@ import six
 import os
 
 DATASET_FILE = "train_dataset.csv"
-CSV_SEPARATOR = ";"
 
 
 @registry.register_problem
@@ -62,8 +61,11 @@ class WordToPhonetic(text_problems.Text2TextProblem):
         source_path = os.path.join(data_dir, DATASET_FILE)
         with tf.gfile.GFile(source_path, mode="r") as source_file:
             for line in source_file:
-                if line and CSV_SEPARATOR in line:
-                    parts = line.split(CSV_SEPARATOR, 1)
+                if line:
+                    csv_sep = ";"
+                    if csv_sep not in line:
+                        csv_sep = ","
+                    parts = line.split(csv_sep, 1)
                     source, target = parts[0].strip(), parts[1].strip()
                     if len(target.split(" ")) > 1:
                         yield {
@@ -86,11 +88,11 @@ def w2p():
   hparams.batch_size = 8000
   hparams.keep_checkpoint_max = 20
 
-  # hparams.batch_size = 20000
-  # hparams.num_heads=4
-  # hparams.filter_size = 512
-  # hparams.hidden_size = 256
-  # hparams.num_hidden_layers=3
+  hparams.batch_size = 20000
+  hparams.num_heads=4
+  hparams.filter_size = 512
+  hparams.hidden_size = 256
+  hparams.num_hidden_layers=3
   hparams.layer_prepostprocess_dropout = 0.3
   hparams.attention_dropout = 0.2
   return hparams

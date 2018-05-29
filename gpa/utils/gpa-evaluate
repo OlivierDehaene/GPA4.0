@@ -1,9 +1,9 @@
-from word2phonetic.utils import w2p_create_vocab
+from gpa.utils import gpa_evaluate
 
 import tensorflow as tf
 
 def main(argv):
-    w2p_create_vocab.main(argv)
+    gpa_evaluate.main(argv)
 
 if __name__ == "__main__":
     tf.app.run()

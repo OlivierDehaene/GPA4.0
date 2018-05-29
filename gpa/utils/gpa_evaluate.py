@@ -25,8 +25,7 @@ import tensorflow as tf
 from tensor2tensor.utils import usr_dir
 from tensor2tensor import problems
 
-
-import decoding_utils
+from gpa.utils.decoding_utils import load_model, prepare_corpus, build_model, evaluate_corpus
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -52,10 +51,10 @@ def main(argv):
             wordList.append(source)
             phon.append(target)
 
-    corpus = decoding_utils.prepare_corpus(wordList, phon)
+    corpus = prepare_corpus(wordList, phon)
 
     usr_dir.import_usr_dir(args.t2t_usr_dir)
-    input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list = decoding_utils.build_model(args.hparams_set, args.model_name,
+    input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats, enc_att_mats, dec_att_mats = build_model(args.hparams_set, args.model_name,
                                                                                                     args.data_dir, args.problem_name,
                                                                                                     beam_size=5,
                                                                                                     top_beams=1)
@@ -64,9 +63,9 @@ def main(argv):
 
     sess = tf.Session()
 
-    assert decoding_utils._load_model(args.model_dir, sess)
+    assert load_model(args.model_dir, sess)
 
-    decoding_utils.evaluate_corpus(sess, corpus, input_tensor, output_phon_tensor, encoder, 1)
+    evaluate_corpus(sess, corpus, input_tensor, output_phon_tensor, encoder, 1)
 
 if __name__ == "__main__":
     tf.app.run()

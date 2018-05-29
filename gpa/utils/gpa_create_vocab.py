@@ -53,6 +53,3 @@ def main(argv):
     df.columns = ["ORTHO", "PHON"]
 
     create_vocab(df, args.output_dir, args.phoneme_sep)
-
-if __name__ == "__main__":
-    main()

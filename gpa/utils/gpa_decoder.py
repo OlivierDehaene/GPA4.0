@@ -25,8 +25,7 @@ import tensorflow as tf
 from tensor2tensor.utils import usr_dir
 from tensor2tensor import problems
 
-
-import decoding_utils
+from gpa.utils.decoding_utils import load_model, decode_wordList, build_model
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -49,7 +48,7 @@ def main(argv):
         wordList = [line.strip().split(args.sep)[0] for line in f.readlines()]
 
     usr_dir.import_usr_dir(args.t2t_usr_dir)
-    input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list = decoding_utils.build_model(args.hparams_set, args.model_name,
+    input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats, enc_att_mats, dec_att_mats = build_model(args.hparams_set, args.model_name,
                                                                                                     args.data_dir, args.problem_name,
                                                                                                     beam_size=5)
     problem = problems.problem(args.problem_name)
@@ -57,9 +56,9 @@ def main(argv):
 
     sess = tf.Session()
 
-    assert decoding_utils._load_model(args.model_dir, sess)
+    assert load_model(args.model_dir, sess)
 
-    decoding_utils.decode_wordList(sess, wordList, input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list, encoder, args.decode_to_file, args.gp_prog)
+    decode_wordList(sess, wordList, input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats, encoder, args.decode_to_file, args.gp_prog)
 
 if __name__ == "__main__":
     tf.app.run()

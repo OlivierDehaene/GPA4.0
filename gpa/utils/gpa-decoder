@@ -1,9 +1,9 @@
-from word2phonetic.utils import w2p_export_model
+from gpa.utils import gpa_decoder
 
 import tensorflow as tf
 
 def main(argv):
-    w2p_export_model.main(argv)
+    gpa_decoder.main(argv)
 
 if __name__ == "__main__":
     tf.app.run()

@@ -32,6 +32,3 @@ def main(argv):
 
 
     train_test_split_dataset(df, args.output_dir, args.test_size, args.seed)
-
-if __name__ == "__main__":
-    main()

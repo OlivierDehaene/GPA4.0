@@ -1,9 +1,9 @@
-from word2phonetic.utils import w2p_stats
+from gpa.utils import gpa_stats
 
 import tensorflow as tf
 
 def main(argv):
-    w2p_stats.main(argv)
+    gpa_stats.main(argv)
 
 if __name__ == "__main__":
     tf.app.run()

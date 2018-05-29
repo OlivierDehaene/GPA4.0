@@ -1,9 +1,9 @@
-from word2phonetic.utils import w2p_decoder
+from gpa.utils import gpa_train_test_split
 
 import tensorflow as tf
 
 def main(argv):
-    w2p_decoder.main(argv)
+    gpa_train_test_split.main(argv)
 
 if __name__ == "__main__":
     tf.app.run()
