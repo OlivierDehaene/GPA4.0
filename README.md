@@ -9,10 +9,10 @@
 
 ```
 # Clone the repository
-git clone https://github.com/OlivierDehaene/word2phonetic
+git clone https://github.com/OlivierDehaene/GPA4.0
 
 # Install the gpa package and its dependencies
-cd word2phonetic
+cd gpa4.0
 pip install -e .
 
 # Train
