@@ -37,15 +37,15 @@ def main(argv):
     parser.add_argument('--model_dir', type=str, required=True)
     parser.add_argument('--data_dir', type=str, required=True)
     parser.add_argument('--gp_prog', type=str, default=None)
-    parser.add_argument('--sep', type=str, default=",")
-    parser.add_argument('--problem_name', type=str, default="word_to_phonetic")
+    parser.add_argument('--csv_sep', type=str, default=",")
+    parser.add_argument('--problem_name', type=str, default="grapheme_to_phoneme")
     parser.add_argument('--model_name', type=str, default="transformer")
-    parser.add_argument('--hparams_set', type=str, default="w2p")
+    parser.add_argument('--hparams_set', type=str, default="g2p")
     parser.add_argument('--t2t_usr_dir', type=str, default=os.path.join(__location__, "../submodule"))
     args = parser.parse_args()
 
     with open(args.decode_from_file, 'r') as f:
-        wordList = [line.strip().split(args.sep)[0] for line in f.readlines()]
+        wordList = [line.strip().split(args.csv_sep)[0] for line in f.readlines()]
 
     usr_dir.import_usr_dir(args.t2t_usr_dir)
     input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats, enc_att_mats, dec_att_mats = build_model(args.hparams_set, args.model_name,

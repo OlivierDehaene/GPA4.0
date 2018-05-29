@@ -13,5 +13,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Importing WordToPhonetic submodule"""
-from . import w2p_submodule
+"""Importing Grapheme2Phoneme submodule"""
+from . import g2p_submodule

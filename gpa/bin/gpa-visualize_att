@@ -1,0 +1,9 @@
+from gpa.scripts import gpa_visualize_att
+
+import tensorflow as tf
+
+def main(argv):
+    gpa_visualize_att.main(argv)
+
+if __name__ == "__main__":
+    tf.app.run()

@@ -13,9 +13,9 @@ FLAGS = flags.FLAGS
 
 def main(argv):
     FLAGS.t2t_usr_dir = os.path.join(__location__, "../submodule")
-    FLAGS.hparams_set = "w2p"
+    FLAGS.hparams_set = "g2p"
     FLAGS.model = "transformer"
-    FLAGS.problem = "word_to_phonetic"
+    FLAGS.problem = "grapheme_to_phoneme"
     if FLAGS.train_steps == None:
         FLAGS.train_steps = 10000
     FLAGS.generate_data = True

@@ -46,8 +46,7 @@ def get_att_mats(translate_model):
         dec_atts.append(dec_att)
         encdec_atts.append(encdec_att)
 
-    selected_heads = [0, 1,
-                      2]  # in our experience, the first, the second last and the last layers are the most interpretable
+    selected_heads = [1, 2]  # in our experience, the first, the second last and the last layers are the most interpretable
     encdec_att_mats = [tf.squeeze(tf.reduce_sum(encdec_atts[head], axis=1)) for head in selected_heads]
     enc_att_mats = [tf.squeeze(tf.reduce_sum(enc_atts[head], axis=1)) for head in selected_heads]
     dec_att_mats = [tf.squeeze(tf.reduce_sum(dec_atts[head], axis=1)) for head in selected_heads]
@@ -300,6 +299,43 @@ def _dic_add(value, dic):
     else:
         dic[value] += 1
 
+def visualize_attention(sess, word, input_tensor, input_phon_tensor, output_phon_tensor, att_mats_encdec,
+                        att_mats_enc, att_mats_dec, encoder):
+    word = [word]
+
+    batch_input_tokenized = np.stack([_encode(input, encoder).squeeze(0) for input in word], 0)
+
+    batch_phon_tokenized = sess.run(output_phon_tensor, feed_dict={input_tensor: batch_input_tokenized})
+
+    batch_phon = [_decode(phon_tokenized, encoder) for phon_tokenized in batch_phon_tokenized]
+
+    encdec_att_mats, enc_att_mats, dec_att_mats = sess.run([att_mats_encdec, att_mats_enc, att_mats_dec], feed_dict={input_tensor: batch_input_tokenized,
+                                                        input_phon_tensor: np.reshape(batch_phon_tokenized,
+                                                                                      [len(word), -1, 1, 1])})
+
+    encdec_sum_all_layers = _normalize(np.sum(np.array(encdec_att_mats), axis=0))[:len(batch_phon[0]), :len(word[0])]
+    enc_sum_all_layers = _normalize(np.sum(np.array(enc_att_mats), axis=0))[:len(batch_phon[0]), :len(word[0])]
+    dec_sum_all_layers = _normalize(np.sum(np.array(dec_att_mats), axis=0))[:len(batch_phon[0]), :len(word[0])]
+
+    _plot_attention_matrix(word[0], batch_phon[0], encdec_sum_all_layers)
+    _plot_attention_matrix(word[0], word[0], enc_sum_all_layers)
+    _plot_attention_matrix(batch_phon[0], batch_phon[0], dec_sum_all_layers)
+
+def _plot_attention_matrix(inp_text, out_text, sum_all_layers):
+    from matplotlib import pyplot as plt
+    source_len = len(inp_text)
+    prediction_len = len(out_text)
+
+
+    fig = plt.figure(figsize=(8, 8))
+    plt.imshow(
+      X=sum_all_layers,
+      interpolation="nearest",
+      cmap=plt.cm.Blues)
+    plt.xticks(np.arange(source_len), inp_text, rotation=45)
+    plt.yticks(np.arange(prediction_len), out_text, rotation=-45)
+    fig.tight_layout()
+    plt.show()
 
 def load_model(model_dir, sess):
     ckpt = tf.train.get_checkpoint_state(model_dir)

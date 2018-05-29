@@ -35,10 +35,10 @@ def main(argv):
     parser.add_argument('--data', type=str, required=True)
     parser.add_argument('--model_dir', type=str, required=True)
     parser.add_argument('--data_dir', type=str, required=True)
-    parser.add_argument('--problem_name', type=str, default="word_to_phonetic")
-    parser.add_argument('--sep', type=str, default=",")
+    parser.add_argument('--problem_name', type=str, default="grapheme_to_phoneme")
+    parser.add_argument('--csv_sep', type=str, default=",")
     parser.add_argument('--model_name', type=str, default="transformer")
-    parser.add_argument('--hparams_set', type=str, default="w2p")
+    parser.add_argument('--hparams_set', type=str, default="g2p")
     parser.add_argument('--t2t_usr_dir', type=str, default=os.path.join(__location__, "../submodule"))
     args = parser.parse_args()
 
@@ -47,7 +47,7 @@ def main(argv):
 
     with open(args.data, 'r') as f:
         for l in f.readlines():
-            source, target = l.strip().split(args.sep)
+            source, target = l.strip().split(args.csv_sep)
             wordList.append(source)
             phon.append(target)
 

@@ -17,6 +17,7 @@ setup(
         'gpa/bin/gpa-evaluate',
         'gpa/bin/gpa-train_test_split',
         'gpa/bin/gpa-train',
+        'gpa/bin/gpa-visualize_att',
     ],
     install_requires=[
         'tensor2tensor==1.6.2',

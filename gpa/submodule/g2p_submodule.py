@@ -28,7 +28,7 @@ DATASET_FILE = "train_dataset.csv"
 
 
 @registry.register_problem
-class WordToPhonetic(text_problems.Text2TextProblem):
+class GraphemeToPhoneme(text_problems.Text2TextProblem):
 
     @property
     def vocab_type(self):
@@ -80,7 +80,7 @@ class WordToPhonetic(text_problems.Text2TextProblem):
 
 
 @registry.register_hparams
-def w2p():
+def g2p():
   hparams = transformer.transformer_base_single_gpu()
   hparams.length_bucket_step=1.5
   hparams.max_length=30
