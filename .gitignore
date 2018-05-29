@@ -9,3 +9,7 @@ word2phonetic/notebooks/\.ipynb_checkpoints/
 word2phonetic/utils/__pycache__/
 
 word2phonetic/submodule/__pycache__/
+
+gpa4\.0\.egg-info/
+
+gpa/utils/__pycache__/

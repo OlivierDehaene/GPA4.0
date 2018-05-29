@@ -1,9 +1,0 @@
-from word2phonetic.utils import w2p_train_test_split
-
-import tensorflow as tf
-
-def main(argv):
-    w2p_train_test_split.main(argv)
-
-if __name__ == "__main__":
-    tf.app.run()
