@@ -1,8 +1,8 @@
-# Word2Phonetic
+# GPA 4.0
 
-[Word2Phonetic](https://github.com/OlivierDehaene/word2phonetic), or
-[w2p](https://github.com/OlivierDehaene/word2phonetic) is a submodule developed for the [Tensor2Tensor](https://github.com/tensorflow/tensor2tensor) library. It does Grapheme-to-Phoneme (G2P) conversion and Grapheme-Phoneme-Alignement using the Transformer model. Transformer is a sequence-to-sequence model that was successfully applied to numerous tasks, including Neural Machine Translation [[1]](https://arxiv.org/pdf/1706.03762.pdf). G2P is a task that was solved in the past using LSTM RNN based architectures [[2]](https://arxiv.org/pdf/1506.00196.pdf) [[3]](https://arxiv.org/pdf/1610.06540.pdf). We build on these results and propose a new G2P and semi-supervised GPAlignement tool.
-[Find out more](https://github.com/OlivierDehaene/word2phonetic/wiki).
+[GPA4.0](https://github.com/OlivierDehaene/GPA4.0), or
+[gpa](https://github.com/OlivierDehaene/GPA4.0) is a submodule developed for the [Tensor2Tensor](https://github.com/tensorflow/tensor2tensor) library. It does Grapheme-to-Phoneme (G2P) conversion and Grapheme-Phoneme-Alignement using the Transformer model. Transformer is a sequence-to-sequence model that was successfully applied to numerous tasks, including Neural Machine Translation [[1]](https://arxiv.org/pdf/1706.03762.pdf). G2P is a task that was solved in the past using LSTM RNN based architectures [[2]](https://arxiv.org/pdf/1506.00196.pdf) [[3]](https://arxiv.org/pdf/1610.06540.pdf). We build on these results and propose a new G2P and semi-supervised GPAlignement tool.
+[Find out more](https://github.com/OlivierDehaene/GPA4.0/wiki).
 
 
 ### Quick Start
@@ -11,15 +11,15 @@
 # Clone the repository
 git clone https://github.com/OlivierDehaene/word2phonetic
 
-# Install the w2p package and its dependencies
+# Install the gpa package and its dependencies
 cd word2phonetic
 pip install -e .
 
 # Train
-DATA_DIR=$HOME/w2p_data
-TRAIN_DIR=$HOME/w2p_checkpoints
+DATA_DIR=$HOME/gpa_data
+TRAIN_DIR=$HOME/gpa_checkpoints
 
-w2p-train # a simple t2t-trainer wrapper with w2p default settings
+gpa-train # a simple t2t-trainer wrapper with gpa default settings
   --data_dir=$DATA_DIR \
   --output_dir=$TRAIN_DIR
 
@@ -29,11 +29,12 @@ DECODE_FILE=./decode_this.txt
 echo "Hello" >> $DECODE_FILE
 echo "world" >> $DECODE_FILE
 
-w2p-decoder 
+gpa-decoder 
   --model_dir=$TRAIN_DIR \
   --decode_from_file=$DECODE_FILE \
-  --decode_to_file=phonoly_gpmatch.csv
+  --decode_to_file=phonology_gpmatch.csv \
+  --data_dir=$DATA_DIR
   
 # See the phonology translation and the grapheme-phoneme alignement
-cat translation.en
+cat phonology_gpmatch.csv
 ```
