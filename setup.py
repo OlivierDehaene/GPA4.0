@@ -2,7 +2,7 @@ from setuptools import find_packages
 from setuptools import setup
 
 setup(
-    name='gpa4.0',
+    name='gpa',
     version='1.0',
     description='Grapheme Phoneme Alignment',
     author='Olivier Dehaene',
