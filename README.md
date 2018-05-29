@@ -4,6 +4,14 @@
 [gpa](https://github.com/OlivierDehaene/GPA4.0) is a submodule developed for the [Tensor2Tensor](https://github.com/tensorflow/tensor2tensor) library. It does Grapheme-to-Phoneme (G2P) conversion and Grapheme-Phoneme-Alignement using the Transformer model. Transformer is a sequence-to-sequence model that was successfully applied to numerous tasks, including Neural Machine Translation [[1]](https://arxiv.org/pdf/1706.03762.pdf). G2P is a task that was solved in the past using LSTM RNN based architectures [[2]](https://arxiv.org/pdf/1506.00196.pdf) [[3]](https://arxiv.org/pdf/1610.06540.pdf). We build on these results and propose a new G2P and semi-supervised GPAlignement tool.
 [Find out more](https://github.com/OlivierDehaene/GPA4.0/wiki).
 
+### Results
+
+|Data set|WER|PER|
+|---|---|---|
+|CMU|20.5%|4.45%|
+|FR|3.6%|0.95%|
+|BR|2.9%|0.6%|
+|ES|0.6%|0.09%|
 
 ### Quick Start
 
