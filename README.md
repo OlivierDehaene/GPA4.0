@@ -12,7 +12,7 @@
 git clone https://github.com/OlivierDehaene/GPA4.0
 
 # Install the gpa package and its dependencies
-cd gpa4.0
+cd GPA4.0
 pip install -e .
 
 # Train
