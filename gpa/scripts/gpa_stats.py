@@ -25,6 +25,7 @@ import tensorflow as tf
 from tensor2tensor.utils import usr_dir
 from tensor2tensor import problems
 import warnings
+
 warnings.filterwarnings('ignore')
 
 from gpa.scripts.decoding_utils import load_model, build_model, stats
@@ -43,6 +44,8 @@ def main(argv):
     parser.add_argument('--model_name', type=str, default="transformer")
     parser.add_argument('--hparams_set', type=str, default="g2p")
     parser.add_argument('--t2t_usr_dir', type=str, default=os.path.join(__location__, "../submodule"))
+    parser.add_argument('--weights', type=list, default=[50, 30, 20])
+    # parser.add_argument('--freq_column', type=list, default=[50, 30, 20])
     args = parser.parse_args()
 
     wordList = []
@@ -55,9 +58,10 @@ def main(argv):
             phon.append(target)
 
     usr_dir.import_usr_dir(args.t2t_usr_dir)
-    input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats, enc_att_mats, dec_att_mats = build_model(args.hparams_set, args.model_name,
-                                                                                                    args.data_dir, args.problem_name,
-                                                                                                    beam_size=5)
+    input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats = build_model(
+        args.hparams_set, args.model_name,
+        args.data_dir, args.problem_name,
+        beam_size=1)
     problem = problems.problem(args.problem_name)
     encoder = problem.feature_encoders(args.data_dir)
 
@@ -65,10 +69,12 @@ def main(argv):
 
     assert load_model(args.model_dir, sess)
 
-    rstats, gpProg = stats(sess, wordList, phon, input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats, encoder)
+    rstats, gpProg = stats(sess, wordList, phon, input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats,
+                           encoder, args.weights)
 
     rstats.to_csv(os.path.join(args.output_dir, "stats.csv"))
     gpProg.to_csv(os.path.join(args.output_dir, "gpProg.csv"), index=False)
+
 
 if __name__ == "__main__":
     tf.app.run()

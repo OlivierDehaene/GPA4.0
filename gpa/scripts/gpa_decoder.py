@@ -48,9 +48,10 @@ def main(argv):
         wordList = [line.strip().split(args.csv_sep)[0] for line in f.readlines()]
 
     usr_dir.import_usr_dir(args.t2t_usr_dir)
-    input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats, enc_att_mats, dec_att_mats = build_model(args.hparams_set, args.model_name,
-                                                                                                    args.data_dir, args.problem_name,
-                                                                                                    beam_size=5)
+    input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats = build_model(
+        args.hparams_set, args.model_name,
+        args.data_dir, args.problem_name,
+        beam_size=1)
     problem = problems.problem(args.problem_name)
     encoder = problem.feature_encoders(args.data_dir)
 
@@ -58,7 +59,9 @@ def main(argv):
 
     assert load_model(args.model_dir, sess)
 
-    decode_wordList(sess, wordList, input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats, encoder, args.decode_to_file, args.gp_prog)
+    decode_wordList(sess, wordList, input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats, encoder,
+                    args.decode_to_file, args.gp_prog)
+
 
 if __name__ == "__main__":
     tf.app.run()

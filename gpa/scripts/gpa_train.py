@@ -14,11 +14,10 @@ FLAGS = flags.FLAGS
 
 def main(argv):
     FLAGS.t2t_usr_dir = os.path.join(__location__, "../submodule")
-    FLAGS.hparams_set = "g2p"
+    FLAGS.hparams_set = "g2p_old"
     FLAGS.model = "transformer"
     FLAGS.problem = "grapheme_to_phoneme"
-    if FLAGS.train_steps is None:
-        FLAGS.train_steps = 10000
+    FLAGS.train_steps = 20000
     FLAGS.generate_data = True
 
     t2t_trainer.main(argv)
