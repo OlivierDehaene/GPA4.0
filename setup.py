@@ -20,7 +20,7 @@ setup(
         'gpa/bin/gpa-visualize_att',
     ],
     install_requires=[
-        'tensor2tensor==1.6.2',
+        'tensor2tensor',
         'tensorflow_gpu>=1.4.1',
         'pandas==0.20.1',
         'tqdm'

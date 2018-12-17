@@ -52,9 +52,9 @@ class GraphemeToPhoneme(text_problems.Text2TextProblem):
             "shards": 9,
         },
             {
-            "split": problem.DatasetSplit.EVAL,
-            "shards": 1,
-        }
+                "split": problem.DatasetSplit.EVAL,
+                "shards": 1,
+            }
         ]
 
     def generate_samples(self, data_dir, tmp_dir, dataset_split):
@@ -81,18 +81,19 @@ class GraphemeToPhoneme(text_problems.Text2TextProblem):
 
 @registry.register_hparams
 def g2p():
-  hparams = transformer.transformer_base_single_gpu()
-  hparams.length_bucket_step=1.5
-  hparams.max_length=30
-  hparams.min_length_bucket=6
-  hparams.batch_size = 8000
-  hparams.keep_checkpoint_max = 20
+    hparams = transformer.transformer_base_single_gpu()
+    hparams.length_bucket_step = 1.5
+    hparams.max_length = 30
+    hparams.min_length_bucket = 6
+    hparams.keep_checkpoint_max = 10
 
-  hparams.batch_size = 20000
-  hparams.num_heads=4
-  hparams.filter_size = 512
-  hparams.hidden_size = 256
-  hparams.num_hidden_layers=3
-  hparams.layer_prepostprocess_dropout = 0.3
-  hparams.attention_dropout = 0.2
-  return hparams
+    hparams.batch_size = 20000
+    hparams.num_heads = 8
+    hparams.filter_size = 512
+    hparams.hidden_size = 256
+    hparams.num_hidden_layers = 4
+    hparams.self_attention_type = 'dot_product_relative_v2'
+    hparams.max_relative_position = 4
+    hparams.layer_prepostprocess_dropout = 0.3
+    hparams.attention_dropout = 0.2
+    return hparams
