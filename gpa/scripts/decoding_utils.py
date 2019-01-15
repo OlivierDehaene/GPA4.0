@@ -80,7 +80,6 @@ def get_att_mats(translate_model):
         encdec_att = translate_model.attention_weights[
             '%sdecoder/layer_%i/encdec_attention%s' % (prefix, i, postfix)]
         encdec_atts.append(encdec_att)
-        print(encdec_att)
 
     encdec_att_mats = [tf.squeeze(tf.reduce_sum(encdec_atts[l], axis=1)) for l in
                        range(translate_model.hparams.num_hidden_layers)]
@@ -143,7 +142,13 @@ def _encode(str_input, encoder, padding_to=None):
 
 
 def _decode(integers, encoder):
-    return [encoder['inputs']._safe_id_to_token(i) for i in integers if i > 1]
+    decoded_str = []
+    for i in integers:
+        if i == 1:
+            break
+        elif i != 0:
+            decoded_str.append(encoder['targets']._safe_id_to_token(i))
+    return decoded_str
 
 
 def _make_prediction_batch(sess, batch_input, input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list,
@@ -154,7 +159,7 @@ def _make_prediction_batch(sess, batch_input, input_tensor, input_phon_tensor, o
 
     batch_phon_tokenized = sess.run(output_phon_tensor, feed_dict={input_tensor: batch_input_tokenized})
 
-    batch_phon = [_decode(phon_tokenized, encoder) for phon_tokenized in batch_phon_tokenized]
+    batch_phon = [_decode(np.squeeze(phon_tokenized), encoder) for phon_tokenized in batch_phon_tokenized]
 
     batch_att_mats = sess.run(att_mats_list, feed_dict={input_tensor: batch_input_tokenized,
                                                         input_phon_tensor: np.reshape(batch_phon_tokenized,
@@ -176,9 +181,9 @@ def _make_translation_batch(sess, batch_input, input_tensor, output_phon_tensor,
     batch_phon = []
     for phon_tokenized_beam in batch_phon_tokenized:
         if top_beams > 1:
-            batch_phon.append(["".join(_decode(phon_tokenized, encoder)) for phon_tokenized in phon_tokenized_beam])
+            batch_phon.append(["".join(_decode(np.squeeze(phon_tokenized), encoder)) for phon_tokenized in phon_tokenized_beam])
         else:
-            batch_phon.append(["".join(_decode(phon_tokenized_beam, encoder))])
+            batch_phon.append(["".join(_decode(np.squeeze(phon_tokenized_beam), encoder))])
     return batch_phon
 
 
@@ -203,15 +208,6 @@ def g2p_mapping_batch(sess, batch_input, input_tensor, input_phon_tensor, output
 
     return batch_input, batch_phon, mapping_batch
 
-
-def _normalize(matrix):
-    """
-        input: a numpy matrix
-        return: matrix with 0 mean and 1 std
-    """
-    return (matrix - np.mean(matrix)) / (np.std(matrix) + 1e-10)
-
-
 def _mapping(inp_text, out_text, sum_all_layers):
     # Base threshold
     # fr : 0.75
@@ -220,7 +216,6 @@ def _mapping(inp_text, out_text, sum_all_layers):
         threshold = 0.4
     else:
         threshold = 0
-
     # While we have too many silent_letters detected
     while (True):
         # Gets the silent_letters indices
@@ -258,12 +253,6 @@ def _mapping(inp_text, out_text, sum_all_layers):
         elif discard_next:
             discard_next = False
 
-    # test = np.where(np.array(phon_list) == phon)[0]
-    #     if len(test > 1):
-    #         phon_list[np.max(test)] = "%"
-
-    ##NOT WORKING PROPERLY
-
     # Creates the g_p tupple list
     g_p = [(l, phon_list[i]) for i, l in enumerate(inp_text)]
 
@@ -273,7 +262,6 @@ def _mapping(inp_text, out_text, sum_all_layers):
         graph = "".join([letter[0] for letter in letters])
         mapping.append(graph + "~" + phon)
 
-    # return ["".join(inp_text), " ".join(out_text), mapping]
     return mapping
 
 
@@ -301,7 +289,6 @@ def visualize_attention(sess, word, input_tensor, input_phon_tensor, output_phon
     for i, encdec_att_mat in enumerate(encdec_att_mats):
         encdec_sum_all_layers = np.array(encdec_att_mat)[:len(batch_phon[0]), :len(word[0])]
         _plot_attention_matrix(word[0], batch_phon[0], encdec_sum_all_layers, 'Enc Dec Att L{}'.format(i))
-    print(np.stack(encdec_att_mats).shape)
     _plot_attention_matrix(word[0], batch_phon[0],
                            np.sum(np.stack(encdec_att_mats), axis=0)[:len(batch_phon[0]), :len(word[0])],
                            'Enc Dec Att SUM')
