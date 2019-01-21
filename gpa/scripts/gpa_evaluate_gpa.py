@@ -21,14 +21,12 @@ import os
 import argparse
 
 import tensorflow as tf
+import pandas as pd
 
 from tensor2tensor.utils import usr_dir
 from tensor2tensor import problems
-import warnings
 
-warnings.filterwarnings('ignore')
-
-from gpa.scripts.decoding_utils import load_model, build_model, stats
+from gpa.scripts.decoding_utils import load_model, prepare_corpus, build_model, evaluate_gpa
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -37,30 +35,24 @@ def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--data', type=str, required=True)
     parser.add_argument('--model_dir', type=str, required=True)
-    parser.add_argument('--output_dir', type=str, required=True)
     parser.add_argument('--data_dir', type=str, required=True)
+    parser.add_argument('--csv_sep', type=str, default=",")
     parser.add_argument('--problem_name', type=str, default="grapheme_to_phoneme")
     parser.add_argument('--model_name', type=str, default="transformer")
     parser.add_argument('--hparams_set', type=str, default="g2p")
     parser.add_argument('--t2t_usr_dir', type=str, default=os.path.join(__location__, "../submodule"))
-    parser.add_argument('--weights', type=list, default=[50, 30, 20])
-    # parser.add_argument('--freq_column', type=list, default=[50, 30, 20])
     args = parser.parse_args()
 
-    wordList = []
-    phon = []
+    df = pd.read_csv(args.data, sep=args.csv_sep)
+    wordList = df.iloc[:, 0]
+    gpa = df.iloc[:, 2]
 
-    with open(args.data, 'r') as f:
-        for l in f.readlines():
-            if ',' in l:
-                csv_sep = ','
-            elif ';' in l:
-                csv_sep = ';'
-            else:
-                raise ValueError
-            source, target = l.strip().split(csv_sep)
-            wordList.append(source)
-            phon.append(target)
+    corpus = {}
+    for w, gp in zip(wordList, gpa):
+        if w in corpus:
+            corpus[w].append(gp.replace('-', '~').split('.'))
+        else:
+            corpus[w] = [gp.replace('-', '~').split('.')]
 
     usr_dir.import_usr_dir(args.t2t_usr_dir)
     input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats = build_model(
@@ -74,11 +66,7 @@ def main(argv):
 
     assert load_model(args.model_dir, sess)
 
-    rstats, gpProg = stats(sess, wordList, phon, input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats,
-                           encoder, args.weights)
-
-    rstats.to_csv(os.path.join(args.output_dir, "stats.csv"))
-    gpProg.to_csv(os.path.join(args.output_dir, "gpProg.csv"), index=False)
+    evaluate_gpa(sess, corpus, input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats, encoder)
 
 
 if __name__ == "__main__":

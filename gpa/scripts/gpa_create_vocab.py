@@ -20,6 +20,20 @@ def create_vocab(words, phonetic_words, output_dir, phoneme_separator):
         tokens = [_ for _ in tokens if len(_) > 0]
         cnt.update(tokens)
 
+    print("Found " + str(len(cnt)) + " unique tokens in the vocabulary.")
+
+    token_with_counts = cnt.most_common()
+    token_with_counts = sorted(
+        token_with_counts, key=lambda x: (x[1], x[0]), reverse=True)
+
+    with io.open(os.path.join(output_dir, "source_vocab"), 'w', encoding='utf-8') as f:
+        f.write("<pad>\n")  # 0 is reserved for the pad token
+        f.write("<EOS>\n")  # 1 is reserved for the end of sequence token
+        for token, count in token_with_counts:
+            f.write(token + "\n")
+
+    cnt = collections.Counter()
+
     for phonetic_word in phonetic_words:
         phonetic_word = str(phonetic_word)
         if phoneme_separator != "":
@@ -36,12 +50,11 @@ def create_vocab(words, phonetic_words, output_dir, phoneme_separator):
     token_with_counts = sorted(
         token_with_counts, key=lambda x: (x[1], x[0]), reverse=True)
 
-    with io.open(os.path.join(output_dir, "vocab"), 'w', encoding='utf-8') as f:
+    with io.open(os.path.join(output_dir, "target_vocab"), 'w', encoding='utf-8') as f:
         f.write("<pad>\n")  # 0 is reserved for the pad token
         f.write("<EOS>\n")  # 1 is reserved for the end of sequence token
         for token, count in token_with_counts:
             f.write(token + "\n")
-
 
 def main(argv):
     parser = argparse.ArgumentParser()
