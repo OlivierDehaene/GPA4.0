@@ -269,7 +269,6 @@ def _plot_attention_matrix(inp_text, out_text, sum_all_layers, name):
     plt.yticks(np.arange(prediction_len), out_text, rotation=-45)
     fig.tight_layout()
     plt.show()
-    plt.savefig(name)
 
 
 def load_model(model_dir, sess):

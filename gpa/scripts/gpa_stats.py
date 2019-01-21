@@ -41,7 +41,7 @@ def main(argv):
     parser.add_argument('--data_dir', type=str, required=True)
     parser.add_argument('--problem_name', type=str, default="grapheme_to_phoneme")
     parser.add_argument('--model_name', type=str, default="transformer")
-    parser.add_argument('--hparams_set', type=str, default="g2p_old")
+    parser.add_argument('--hparams_set', type=str, default="g2p")
     parser.add_argument('--t2t_usr_dir', type=str, default=os.path.join(__location__, "../submodule"))
     parser.add_argument('--weights', type=list, default=[50, 30, 20])
     # parser.add_argument('--freq_column', type=list, default=[50, 30, 20])
