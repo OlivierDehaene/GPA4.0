@@ -17,13 +17,11 @@ from tensor2tensor.data_generators import problem
 from tensor2tensor.data_generators import text_problems
 from tensor2tensor.data_generators import text_encoder
 from tensor2tensor.models import transformer
-from tensor2tensor.models.research import universal_transformer
 from tensor2tensor.utils import registry
 from tensor2tensor.utils import mlperf_log
 
 import tensorflow as tf
 
-import six
 import os
 
 DATASET_FILE = "train_dataset.csv"
