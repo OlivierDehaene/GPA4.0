@@ -17,8 +17,7 @@ def main(argv):
     FLAGS.hparams_set = "g2p"
     FLAGS.model = "transformer"
     FLAGS.problem = "grapheme_to_phoneme"
-    if FLAGS.train_steps is None:
-        FLAGS.train_steps = 10000
+    FLAGS.train_steps = 100000
     FLAGS.generate_data = True
 
     t2t_trainer.main(argv)

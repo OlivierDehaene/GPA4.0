@@ -12,6 +12,7 @@ from sklearn.model_selection import train_test_split
 
 
 def train_test_split_dataset(words, phonetic_words, output_dir, test_size=0.25, seed=123):
+    phonetic_words = [" ".join(list(word.replace(' ', ''))) for word in phonetic_words]
     txt_train, txt_test, phon_train, phon_test = train_test_split(np.array(words), np.array(phonetic_words),
                                                                   test_size=test_size, random_state=seed)
 

@@ -133,3 +133,59 @@ def g2p():
     hparams.layer_prepostprocess_dropout = 0.3
     hparams.attention_dropout = 0.2
     return hparams
+
+
+@registry.register_hparams
+def g2p_smaller():
+    hparams = transformer.transformer_base_single_gpu()
+    hparams.length_bucket_step = 1.5
+    hparams.max_length = 30
+    hparams.min_length_bucket = 4
+    hparams.keep_checkpoint_max = 10
+
+    hparams.batch_size = 20000
+    hparams.num_heads = 4
+    hparams.filter_size = 512
+    hparams.hidden_size = 256
+    hparams.num_hidden_layers = 3
+    hparams.self_attention_type = 'dot_product_relative_v2'
+    hparams.max_relative_position = 4
+    hparams.layer_prepostprocess_dropout = 0.3
+    hparams.attention_dropout = 0.2
+    return hparams
+
+
+@registry.register_hparams
+def g2p_old():
+    hparams = transformer.transformer_base_single_gpu()
+    hparams.length_bucket_step = 1.5
+    hparams.max_length = 30
+    hparams.min_length_bucket = 6
+    hparams.keep_checkpoint_max = 10
+
+    hparams.batch_size = 20000
+    hparams.num_heads = 4
+    hparams.filter_size = 512
+    hparams.hidden_size = 256
+    hparams.num_hidden_layers = 3
+    hparams.layer_prepostprocess_dropout = 0.3
+    hparams.attention_dropout = 0.2
+    return hparams
+
+
+@registry.register_hparams
+def g2p_universal():
+    hparams = universal_transformer.universal_transformer_base()
+    hparams.length_bucket_step = 1.5
+    hparams.max_length = 30
+    hparams.min_length_bucket = 6
+    hparams.keep_checkpoint_max = 10
+
+    hparams.batch_size = 20000
+    hparams.num_heads = 4
+    hparams.filter_size = 512
+    hparams.hidden_size = 256
+    hparams.num_hidden_layers = 3
+    hparams.layer_prepostprocess_dropout = 0.3
+    hparams.attention_dropout = 0.2
+    return hparams
