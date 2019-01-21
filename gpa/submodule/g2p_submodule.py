@@ -17,7 +17,9 @@ from tensor2tensor.data_generators import problem
 from tensor2tensor.data_generators import text_problems
 from tensor2tensor.data_generators import text_encoder
 from tensor2tensor.models import transformer
+from tensor2tensor.models.research import universal_transformer
 from tensor2tensor.utils import registry
+from tensor2tensor.utils import mlperf_log
 
 import tensorflow as tf
 
@@ -37,6 +39,34 @@ class GraphemeToPhoneme(text_problems.Text2TextProblem):
     @property
     def vocab_filename(self):
         return "vocab"
+
+    def feature_encoders(self, data_dir):
+        encoders = {"targets": self.get_or_create_vocab(data_dir, is_target=True)}
+        if self.has_inputs:
+            encoders["inputs"] = self.get_or_create_vocab(data_dir, is_target=False)
+        return encoders
+
+    def get_or_create_vocab(self, data_dir, is_target):
+        assert self.vocab_type == text_problems.VocabType.TOKEN
+        vocab_filename = 'source_' + self.vocab_filename if not is_target else 'target_' + self.vocab_filename
+        vocab_filename = os.path.join(data_dir, vocab_filename)
+        encoder = text_encoder.TokenTextEncoder(vocab_filename,
+                                                replace_oov=self.oov_token)
+
+        return encoder
+
+    def generate_encoded_samples(self, data_dir, tmp_dir, dataset_split):
+        if dataset_split == problem.DatasetSplit.TRAIN:
+            mlperf_log.transformer_print(key=mlperf_log.PREPROC_TOKENIZE_TRAINING)
+        elif dataset_split == problem.DatasetSplit.EVAL:
+            mlperf_log.transformer_print(key=mlperf_log.PREPROC_TOKENIZE_EVAL)
+
+        generator = self.generate_samples(data_dir, tmp_dir, dataset_split)
+        encoder = self.get_or_create_vocab(data_dir, is_target=False)
+        target_encoder = self.get_or_create_vocab(data_dir, is_target=True)
+        return text2text_generate_encoded(generator, encoder,
+                                          has_inputs=self.has_inputs,
+                                          targets_vocab=target_encoder)
 
     @property
     def is_generate_per_split(self):
@@ -67,16 +97,24 @@ class GraphemeToPhoneme(text_problems.Text2TextProblem):
                         csv_sep = ","
                     parts = line.split(csv_sep, 1)
                     source, target = parts[0].strip(), parts[1].strip()
-                    if len(target.split(" ")) > 1:
-                        yield {
-                            "inputs": " ".join(list(source)),
-                            "targets": target
-                        }
-                    else:
-                        yield {
-                            "inputs": " ".join(list(source)),
-                            "targets": " ".join(list(target))
-                        }
+                    yield {
+                        "inputs": " ".join(list(source)),
+                        "targets": target
+                    }
+
+
+def text2text_generate_encoded(sample_generator,
+                               vocab,
+                               targets_vocab,
+                               has_inputs=True):
+    """Encode Text2Text samples from the generator with the vocab."""
+    for sample in sample_generator:
+        if has_inputs:
+            sample["inputs"] = vocab.encode(sample["inputs"])
+            sample["inputs"].append(text_encoder.EOS_ID)
+        sample["targets"] = targets_vocab.encode(sample["targets"])
+        sample["targets"].append(text_encoder.EOS_ID)
+        yield sample
 
 
 @registry.register_hparams
@@ -88,12 +126,10 @@ def g2p():
     hparams.keep_checkpoint_max = 10
 
     hparams.batch_size = 20000
-    hparams.num_heads = 8
+    hparams.num_heads = 4
     hparams.filter_size = 512
     hparams.hidden_size = 256
-    hparams.num_hidden_layers = 4
-    hparams.self_attention_type = 'dot_product_relative_v2'
-    hparams.max_relative_position = 4
+    hparams.num_hidden_layers = 3
     hparams.layer_prepostprocess_dropout = 0.3
     hparams.attention_dropout = 0.2
     return hparams
