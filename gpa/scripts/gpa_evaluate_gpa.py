@@ -19,28 +19,40 @@ from __future__ import print_function
 
 import os
 import argparse
-import json
 
 import tensorflow as tf
+import pandas as pd
 
 from tensor2tensor.utils import usr_dir
 from tensor2tensor import problems
 
-from gpa.scripts.decoding_utils import load_model, build_model, visualize_attention
+from gpa.scripts.decoding_utils import load_model, prepare_corpus, build_model, evaluate_gpa
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 
 def main(argv):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--word', type=str, required=True)
+    parser.add_argument('--data', type=str, required=True)
     parser.add_argument('--model_dir', type=str, required=True)
     parser.add_argument('--data_dir', type=str, required=True)
+    parser.add_argument('--csv_sep', type=str, default=",")
     parser.add_argument('--problem_name', type=str, default="grapheme_to_phoneme")
     parser.add_argument('--model_name', type=str, default="transformer")
     parser.add_argument('--hparams_set', type=str, default="g2p_old")
     parser.add_argument('--t2t_usr_dir', type=str, default=os.path.join(__location__, "../submodule"))
     args = parser.parse_args()
+
+    df = pd.read_csv(args.data, sep=args.csv_sep)
+    wordList = df.iloc[:, 0]
+    gpa = df.iloc[:, 2]
+
+    corpus = {}
+    for w, gp in zip(wordList, gpa):
+        if w in corpus:
+            corpus[w].append(gp.replace('-', '~').split('.'))
+        else:
+            corpus[w] = [gp.replace('-', '~').split('.')]
 
     usr_dir.import_usr_dir(args.t2t_usr_dir)
     input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats = build_model(
@@ -54,7 +66,7 @@ def main(argv):
 
     assert load_model(args.model_dir, sess)
 
-    visualize_attention(sess, args.word, input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats, encoder)
+    evaluate_gpa(sess, corpus, input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats, encoder)
 
 
 if __name__ == "__main__":
