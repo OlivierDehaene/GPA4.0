@@ -45,7 +45,7 @@ def main(argv):
 
     df = pd.read_csv(args.data, sep=args.csv_sep)
     wordList = df.iloc[:, 0]
-    gpa = df.iloc[:, 2]
+    gpa = df.iloc[:, 1]
 
     corpus = {}
     for w, gp in zip(wordList, gpa):

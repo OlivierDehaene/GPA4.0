@@ -445,24 +445,25 @@ def stats(sess, wordList, phon, input_tensor, input_phon_tensor, output_phon_ten
             _dic_add(g, gCountDic)
             _dic_add(p, pCountDic)
 
+    max_indiv_gpCount = max(gpCountDic.values())
     gpCount = sum(gpCountDic.values())
     tupList = []
     for i in range(len(gpList)):
         gp = gpList[i]
         g, p = gp.split("~")
-        tup = (gp, gpCountDic[gp] / gpCount,
+        tup = (gp, gpCountDic[gp] / gpCount, gpCountDic[gp] / max_indiv_gpCount,
                gpCountDic[gp] / gCountDic[g], gpCountDic[gp] / pCountDic[p])
         tupList.append(tup)
 
     df = pd.DataFrame()
     df = df.append(tupList, ignore_index=True)
-    df.columns = [["GP", "GP FREQ IN DATASET", "G CONSISTENCY", "P CONSISTENCY"]]
+    df.columns = [["GP", "GP FREQ IN DATASET", "GP FREQ SCALED", "G CONSISTENCY", "P CONSISTENCY"]]
 
     if freq is None:
-        scores = np.dot(weights, np.transpose(df[["GP FREQ IN DATASET", "G CONSISTENCY", "P CONSISTENCY"]]))
+        scores = np.dot(weights, np.transpose(df[["GP FREQ SCALED", "G CONSISTENCY", "P CONSISTENCY"]]))
     else:
         scores = np.dot(weights,
-                        np.concatenate(np.transpose(df[["GP FREQ IN DATASET", "G CONSISTENCY", "P CONSISTENCY"]]),
+                        np.concatenate(np.transpose(df[["GP FREQ SCALED", "G CONSISTENCY", "P CONSISTENCY"]]),
                                        freq))
     df["SCORE"] = scores
     df.sort_values(["SCORE"], ascending=False, inplace=True)

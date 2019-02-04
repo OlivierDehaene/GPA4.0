@@ -21,6 +21,7 @@ import os
 import argparse
 
 import tensorflow as tf
+import pandas as pd
 
 from tensor2tensor.utils import usr_dir
 from tensor2tensor import problems
@@ -39,28 +40,18 @@ def main(argv):
     parser.add_argument('--model_dir', type=str, required=True)
     parser.add_argument('--output_dir', type=str, required=True)
     parser.add_argument('--data_dir', type=str, required=True)
+    parser.add_argument('--csv_sep', type=str, default=",")
     parser.add_argument('--problem_name', type=str, default="grapheme_to_phoneme")
     parser.add_argument('--model_name', type=str, default="transformer")
     parser.add_argument('--hparams_set', type=str, default="g2p")
     parser.add_argument('--t2t_usr_dir', type=str, default=os.path.join(__location__, "../submodule"))
-    parser.add_argument('--weights', type=list, default=[50, 30, 20])
+    parser.add_argument('--weights', type=list, default=[100, 0, 0])
     # parser.add_argument('--freq_column', type=list, default=[50, 30, 20])
     args = parser.parse_args()
 
-    wordList = []
-    phon = []
-
-    with open(args.data, 'r') as f:
-        for l in f.readlines():
-            if ',' in l:
-                csv_sep = ','
-            elif ';' in l:
-                csv_sep = ';'
-            else:
-                raise ValueError
-            source, target = l.strip().split(csv_sep)
-            wordList.append(source)
-            phon.append(target)
+    df = pd.read_csv(args.data, sep=args.csv_sep)
+    wordList = df.iloc[:, 0]
+    phon = df.iloc[:, 1]
 
     usr_dir.import_usr_dir(args.t2t_usr_dir)
     input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats = build_model(
