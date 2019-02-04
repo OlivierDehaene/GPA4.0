@@ -7,7 +7,7 @@ import os
 import numpy as np
 import tensorflow as tf
 from copy import deepcopy, copy
-from itertools import groupby, chain
+from itertools import chain
 from tqdm import tqdm
 
 import pandas as pd
@@ -109,7 +109,11 @@ def _decode(integers, encoder):
 
 def _make_prediction_batch(sess, batch_input, input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list,
                            encoder):
-    padding_to = len(max(batch_input, key=len)) + 1
+    try:
+        padding_to = len(max(batch_input, key=len)) + 1
+    except:
+        print(batch_input)
+        raise ValueError
 
     batch_input_tokenized = np.stack([_encode(input, encoder, padding_to).squeeze(0) for input in batch_input], 0)
 
@@ -226,11 +230,11 @@ def _mapping(inp_text, out_text, sum_all_layers):
     return mapping
 
 
-def _dic_add(value, dic):
+def _dic_add(value, dic, multiplier=1):
     if value not in dic:
-        dic[value] = 1
+        dic[value] = 1 * multiplier
     else:
-        dic[value] += 1
+        dic[value] += 1 * multiplier
 
 
 def visualize_attention(sess, word, input_tensor, input_phon_tensor, output_phon_tensor, att_mats_encdec, encoder):
@@ -281,78 +285,78 @@ def load_model(model_dir, sess):
     return False
 
 
-def _get_unique_words(wordGp):
-    uniqueWordList = []
-    for word, pred, gpMatch, copy in wordGp:
-        if (word, pred) not in uniqueWordList:
-            uniqueWordList.append((word, pred))
+def _get_unique_words(word_gp):
+    unique_word_list = []
+    for word, pred, gpMatch, copy in word_gp:
+        if (word, pred) not in unique_word_list:
+            unique_word_list.append((word, pred))
         else:
-            wordGp.remove((word, pred, gpMatch, copy))
-    return wordGp
+            word_gp.remove((word, pred, gpMatch, copy))
+    return word_gp
 
 
-def _generate_word_list(wordGp, gpProg=None):
-    if gpProg:
-        gpProg = pd.read_csv(gpProg)
-        tempList = []
-        for i in range(len(gpProg)):
-            lesson = gpProg.loc[i]
+def _generate_word_list(word_gp, gp_prog=None):
+    if gp_prog:
+        gp_prog = pd.read_csv(gp_prog)
+        temp_list = []
+        for i in range(len(gp_prog)):
+            lesson = gp_prog.loc[i]
 
-            for word, pred, gpMatch, copy in wordGp[:]:
+            for word, pred, gpMatch, copy in word_gp[:]:
                 for gp in gpMatch[:]:
                     if gp == lesson["GP"]:
                         gpMatch.remove(gp)
                 if len(gpMatch) == 0:
-                    tempList.append(((int(lesson["LESSON"])), "".join(word), "".join(pred), ".".join(copy),
-                                     len(word), len(pred)))
+                    temp_list.append(((int(lesson["LESSON"])), "".join(word), "".join(pred), ".".join(copy),
+                                      len(word), len(pred)))
 
-                    wordGp.remove((word, pred, gpMatch, copy))
-        for word, pred, gpMatch, copy in wordGp[:]:
-            tempList.append((999, "".join(word), "".join(pred), ".".join(copy), len(word), len(pred)))
+                    word_gp.remove((word, pred, gpMatch, copy))
+        for word, pred, gpMatch, copy in word_gp[:]:
+            temp_list.append((999, "".join(word), "".join(pred), ".".join(copy), len(word), len(pred)))
 
-        wordList = pd.DataFrame()
-        wordList = wordList.append(tempList, ignore_index=True)
-        wordList.columns = [["LESSON", "SPELLING", "PHONOLOGY", "GPMATCH", "N LETTERS", "N PHONEMES"]]
-        return wordList
+        word_list = pd.DataFrame()
+        word_list = word_list.append(temp_list, ignore_index=True)
+        word_list.columns = [["LESSON", "SPELLING", "PHONOLOGY", "GPMATCH", "N LETTERS", "N PHONEMES"]]
+        return word_list
     else:
-        tempList = []
-        for word, pred, gpMatch, copy in wordGp[:]:
-            tempList.append(("".join(word), " ".join(pred), ".".join(copy), len(word), len(pred)))
-        wordList = pd.DataFrame()
-        wordList = wordList.append(tempList, ignore_index=True)
-        wordList.columns = [["SPELLING", "PHONOLOGY", "GPMATCH", "N LETTERS", "N PHONEMES"]]
-        return wordList
+        temp_list = []
+        for word, pred, gpMatch, copy in word_gp[:]:
+            temp_list.append(("".join(word), " ".join(pred), ".".join(copy), len(word), len(pred)))
+        word_list = pd.DataFrame()
+        word_list = word_list.append(temp_list, ignore_index=True)
+        word_list.columns = [["SPELLING", "PHONOLOGY", "GPMATCH", "N LETTERS", "N PHONEMES"]]
+        return word_list
 
 
-def decode_wordList(sess, wordList, input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list, encoder,
+def decode_wordList(sess, word_list, input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list, encoder,
                     decode_to_file, gpProg):
     batch_size = 128  # conservative batch size to dodge out of memory issues
-    wordCount = len(wordList)
+    word_count = len(word_list)
 
     phon_results = []
     gp_results = []
 
-    n_batch = wordCount // batch_size
+    n_batch = word_count // batch_size
     for idx_batch in tqdm(range(n_batch + 1), "GP Matching"):
         try:
-            batch = wordList[idx_batch * batch_size:(idx_batch + 1) * batch_size]
+            batch = word_list[idx_batch * batch_size:(idx_batch + 1) * batch_size]
         except:
-            batch = wordList[n_batch * batch_size:]
+            batch = word_list[n_batch * batch_size:]
         _, batch_phon_results, batch_gp_results = g2p_mapping_batch(sess, batch, input_tensor, input_phon_tensor,
                                                                     output_phon_tensor, att_mats_list, encoder)
         phon_results.extend(batch_phon_results)
         gp_results.extend(batch_gp_results)
 
-    wordGp = list(zip(wordList, phon_results, deepcopy(gp_results), deepcopy(gp_results)))
-    wordGp = _get_unique_words(wordGp)
-    wordList = _generate_word_list(wordGp, gpProg)
+    word_gp = list(zip(word_list, phon_results, deepcopy(gp_results), deepcopy(gp_results)))
+    word_gp = _get_unique_words(word_gp)
+    word_list = _generate_word_list(word_gp, gpProg)
 
-    wordList.to_csv(decode_to_file, encoding="UTF-8")
+    word_list.to_csv(decode_to_file, encoding="UTF-8")
 
 
-def prepare_corpus(wordList, phon):
+def prepare_corpus(word_list, phon):
     corpus = {}
-    for w, p in zip(wordList, phon):
+    for w, p in zip(word_list, phon):
         if w in corpus:
             corpus[w].append(p.replace(" ", ""))
         else:
@@ -362,17 +366,17 @@ def prepare_corpus(wordList, phon):
 
 def evaluate_corpus(sess, corpus, input_tensor, output_phon_tensor, encoder, top_beams):
     batch_size = 128  # conservative batch size to dodge out of memory issues
-    wordList = list(corpus.keys())
-    wordCount = len(wordList)
+    word_list = list(corpus.keys())
+    word_count = len(word_list)
 
     phon_results = []
 
-    n_batch = wordCount // batch_size
+    n_batch = word_count // batch_size
     for idx_batch in tqdm(range(n_batch + 1), "Phon Translation"):
         try:
-            batch = wordList[idx_batch * batch_size:(idx_batch + 1) * batch_size]
+            batch = word_list[idx_batch * batch_size:(idx_batch + 1) * batch_size]
         except:
-            batch = wordList[n_batch * batch_size:]
+            batch = word_list[n_batch * batch_size:]
         batch_phon_results = _make_translation_batch(sess, batch, input_tensor, output_phon_tensor, top_beams,
                                                      encoder)
         phon_results.extend(batch_phon_results)
@@ -383,17 +387,17 @@ def evaluate_corpus(sess, corpus, input_tensor, output_phon_tensor, encoder, top
 
 def evaluate_gpa(sess, corpus, input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list, encoder):
     batch_size = 128  # conservative batch size to dodge out of memory issues
-    wordList = list(corpus.keys())
-    wordCount = len(wordList)
+    word_list = list(corpus.keys())
+    word_count = len(word_list)
 
     gp_results = []
 
-    n_batch = wordCount // batch_size
+    n_batch = word_count // batch_size
     for idx_batch in tqdm(range(n_batch + 1), "Phon Translation"):
         try:
-            batch = wordList[idx_batch * batch_size:(idx_batch + 1) * batch_size]
+            batch = word_list[idx_batch * batch_size:(idx_batch + 1) * batch_size]
         except:
-            batch = wordList[n_batch * batch_size:]
+            batch = word_list[n_batch * batch_size:]
 
         _, _, batch_gp_results = g2p_mapping_batch(sess, batch, input_tensor, input_phon_tensor,
                                                    output_phon_tensor, att_mats_list, encoder)
@@ -403,23 +407,25 @@ def evaluate_gpa(sess, corpus, input_tensor, input_phon_tensor, output_phon_tens
     print("WER : {:.4%} ; PER : {:.4%}".format(rates[0], rates[1]))
 
 
-def stats(sess, wordList, phon, input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list, encoder,
-          weights, freq=None):
-    if freq is not None:
-        assert len(weights) == 4
+def stats(sess, word_list, phon, input_tensor, input_phon_tensor, output_phon_tensor, att_mats_list, encoder,
+          word_count_per_mill=None):
+    if word_count_per_mill is not None:
+        assert len(word_count_per_mill) == len(word_list)
+    else:
+        word_count_per_mill = np.repeat(1e6 / len(word_list), len(word_list))
 
     batch_size = 128  # conservative batch size to dodge out of memory issues
-    wordCount = len(wordList)
+    word_count = len(word_list)
 
     phon_results = []
     gp_results = []
 
-    n_batch = wordCount // batch_size
+    n_batch = word_count // batch_size
     for idx_batch in tqdm(range(n_batch + 1), "GP Matching"):
         try:
-            batch = wordList[idx_batch * batch_size:(idx_batch + 1) * batch_size]
+            batch = word_list[idx_batch * batch_size:(idx_batch + 1) * batch_size]
         except:
-            batch = wordList[n_batch * batch_size:]
+            batch = word_list[n_batch * batch_size:]
         _, batch_phon_results, batch_gp_results = g2p_mapping_batch(sess, batch, input_tensor, input_phon_tensor,
                                                                     output_phon_tensor, att_mats_list, encoder)
         gp_results.extend(batch_gp_results)
@@ -431,48 +437,40 @@ def stats(sess, wordList, phon, input_tensor, input_phon_tensor, output_phon_ten
         phon_results = ["".join(phon) for phon in phon_results]
     gp_results = np.delete(np.array(gp_results), np.where(np.array(phon) != np.array(phon_results)))
 
-    gpList = []
-    gpCountDic = {}
-    gCountDic = {}
-    pCountDic = {}
+    gp_list = []
+    gp_count_dic = {}
+    g_count_dic = {}
+    p_count_dic = {}
 
-    for r in gp_results:
+    for r, n in zip(gp_results, word_count_per_mill):
         for gp in r:
             g, p = gp.split("~")
-            if gp not in gpList:
-                gpList.append(gp)
-            _dic_add(gp, gpCountDic)
-            _dic_add(g, gCountDic)
-            _dic_add(p, pCountDic)
+            if gp not in gp_list:
+                gp_list.append(gp)
+            _dic_add(gp, gp_count_dic, multiplier=n)
+            _dic_add(g, g_count_dic, multiplier=n)
+            _dic_add(p, p_count_dic, multiplier=n)
 
-    max_indiv_gpCount = max(gpCountDic.values())
-    gpCount = sum(gpCountDic.values())
-    tupList = []
-    for i in range(len(gpList)):
-        gp = gpList[i]
+    max_indiv_gp_count = max(gp_count_dic.values())
+    tup_list = []
+    for i in range(len(gp_list)):
+        gp = gp_list[i]
         g, p = gp.split("~")
-        tup = (gp, gpCountDic[gp] / gpCount, gpCountDic[gp] / max_indiv_gpCount,
-               gpCountDic[gp] / gCountDic[g], gpCountDic[gp] / pCountDic[p])
-        tupList.append(tup)
+        tup = (gp, gp_count_dic[gp], gp_count_dic[gp] / max_indiv_gp_count,
+               gp_count_dic[gp] / g_count_dic[g], gp_count_dic[gp] / p_count_dic[p])
+        tup_list.append(tup)
 
     df = pd.DataFrame()
-    df = df.append(tupList, ignore_index=True)
-    df.columns = [["GP", "GP FREQ IN DATASET", "GP FREQ SCALED", "G CONSISTENCY", "P CONSISTENCY"]]
+    df = df.append(tup_list, ignore_index=True)
+    df.columns = [["GP", "GP COUNT PER MILL", "GP FREQ SCALED", "G CONSISTENCY", "P CONSISTENCY"]]
 
-    if freq is None:
-        scores = np.dot(weights, np.transpose(df[["GP FREQ SCALED", "G CONSISTENCY", "P CONSISTENCY"]]))
-    else:
-        scores = np.dot(weights,
-                        np.concatenate(np.transpose(df[["GP FREQ SCALED", "G CONSISTENCY", "P CONSISTENCY"]]),
-                                       freq))
-    df["SCORE"] = scores
-    df.sort_values(["SCORE"], ascending=False, inplace=True)
+    df.sort_values(["GP COUNT PER MILL"], ascending=False, inplace=True)
     df.reset_index(drop=True, inplace=True)
 
-    gpProg = df[["GP"]]
-    gpProg["LESSON"] = gpProg.index + 1
+    gp_prog = df[["GP"]]
+    gp_prog["LESSON"] = gp_prog.index + 1
 
-    return df, gpProg
+    return df, gp_prog
 
 
 def levenshtein(s1, s2):

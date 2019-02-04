@@ -45,13 +45,16 @@ def main(argv):
     parser.add_argument('--model_name', type=str, default="transformer")
     parser.add_argument('--hparams_set', type=str, default="g2p")
     parser.add_argument('--t2t_usr_dir', type=str, default=os.path.join(__location__, "../submodule"))
-    parser.add_argument('--weights', type=list, default=[100, 0, 0])
-    # parser.add_argument('--freq_column', type=list, default=[50, 30, 20])
+    parser.add_argument('--word_count_per_mill', type=str, default=None)
     args = parser.parse_args()
 
     df = pd.read_csv(args.data, sep=args.csv_sep)
     wordList = df.iloc[:, 0]
     phon = df.iloc[:, 1]
+    if args.word_count_per_mill is not None:
+        word_count_per_mill = df[args.word_count_per_mill]
+    else:
+        word_count_per_mill = None
 
     usr_dir.import_usr_dir(args.t2t_usr_dir)
     input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats = build_model(
@@ -66,7 +69,7 @@ def main(argv):
     assert load_model(args.model_dir, sess)
 
     rstats, gpProg = stats(sess, wordList, phon, input_tensor, input_phon_tensor, output_phon_tensor, encdec_att_mats,
-                           encoder, args.weights)
+                           encoder, word_count_per_mill)
 
     rstats.to_csv(os.path.join(args.output_dir, "stats.csv"))
     gpProg.to_csv(os.path.join(args.output_dir, "gpProg.csv"), index=False)
